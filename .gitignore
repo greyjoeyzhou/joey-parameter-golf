@@ -1,0 +1,67 @@
+# Secrets
+.env
+.envrc
+*.pem
+*.key
+*secret*
+*credential*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+.python-version
+
+# uv / pip build artifacts
+*.egg-info/
+build/
+dist/
+pip-wheel-metadata/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dataset cache (lives under the submodule; never commit)
+parameter-golf/data/datasets/
+parameter-golf/data/tokenizers/
+
+# Model weights / checkpoints (commit only the final 16MB submission artifact, explicitly)
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+*.onnx
+checkpoints/
+
+# Experiment tracking
+wandb/
+mlruns/
+lightning_logs/
+tb_logs/
+runs/**/events.out.tfevents.*
+
+# Large logs outside the runs/ convention — keep logs inside runs/
+*.log
+!runs/**/*.log
+
+# Compiled Triton / torch.compile cache
+.triton/
+torchinductor_cache/
