@@ -36,7 +36,7 @@ The results below are from the recent record replays. They are **not** the prima
 ## Local Harness Adjustments
 
 - The upstream record scripts assume Hopper `flash_attn_3`. On this Blackwell 5090, `PYTHONPATH=local_shims` injects a local `flash_attn_interface` shim backed by PyTorch SDPA so the scripts can run.
-- The scripts also shell out to `nvidia-smi`. `PATH=local_bin:$PATH` injects a lightweight local compatibility command because `nvidia-smi` is not available on this machine's PATH.
+- The scripts also shell out to `nvidia-smi`. On this WSL setup the real binary lives at `/usr/lib/wsl/lib/nvidia-smi`, so the benchmark commands prepend `/usr/lib/wsl/lib` to `PATH` when needed.
 - `WARMUP_STEPS=1` was used for the local benchmarks so compile warmup did not consume nearly the entire wallclock budget before measurable training started.
 - `GPTQ_CALIBRATION_BATCHES=1` was used on later runs to shorten post-training quantization. Throughput comparisons below use the training-phase wallclock stop, not the GPTQ tail.
 

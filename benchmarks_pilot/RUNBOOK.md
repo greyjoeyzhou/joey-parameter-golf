@@ -97,7 +97,7 @@ export SEED=42
 - **Network (dataset download only)**: HuggingFace Hub (HTTPS). ✓ Outbound only. No credentials needed for `kevclark/parameter-golf` public repo.
 - **No sudo needed** for any step.
 
-Verify GPU access: `local_bin/nvidia-smi` is used on this machine because the real `nvidia-smi` is not on PATH.
+Verify GPU access: the real binary is `/usr/lib/wsl/lib/nvidia-smi` on this machine.
 
 ---
 
@@ -110,7 +110,7 @@ These record replays are still useful, but treat them as **secondary compatibili
 ```bash
 cd /home/joey/Code/joey-parameter-golf/parameter-golf
 
-PATH=/home/joey/Code/joey-parameter-golf/local_bin:$PATH \
+PATH=/usr/lib/wsl/lib:$PATH \
 PYTHONPATH=/home/joey/Code/joey-parameter-golf/local_shims \
 TORCHINDUCTOR_MIX_ORDER_REDUCTION=0 \
 MAX_WALLCLOCK_SECONDS=1200 \
@@ -131,7 +131,7 @@ TTT_ENABLED=1 TTT_LR=0.005 TTT_EPOCHS=3 \
 ```bash
 cd /home/joey/Code/joey-parameter-golf/parameter-golf
 
-PATH=/home/joey/Code/joey-parameter-golf/local_bin:$PATH \
+PATH=/usr/lib/wsl/lib:$PATH \
 PYTHONPATH=/home/joey/Code/joey-parameter-golf/local_shims \
 TORCHINDUCTOR_MIX_ORDER_REDUCTION=0 \
 MAX_WALLCLOCK_SECONDS=1200 \
@@ -152,7 +152,7 @@ PARALLEL_START_LAYER=7 \
 ```bash
 cd /home/joey/Code/joey-parameter-golf/parameter-golf
 
-PATH=/home/joey/Code/joey-parameter-golf/local_bin:$PATH \
+PATH=/usr/lib/wsl/lib:$PATH \
 PYTHONPATH=/home/joey/Code/joey-parameter-golf/local_shims \
 TORCHINDUCTOR_MIX_ORDER_REDUCTION=0 \
 MAX_WALLCLOCK_SECONDS=1200 \
@@ -176,7 +176,7 @@ Run these in a separate terminal while training is active:
 
 ```bash
 # GPU utilization and memory
-watch -n 2 /home/joey/Code/joey-parameter-golf/local_bin/nvidia-smi
+watch -n 2 /usr/lib/wsl/lib/nvidia-smi
 
 # Live log tail with step timing
 tail -f benchmarks_pilot/2026-04-21_<RUN>/train.log | grep -E "step|val|loss|bpb|tok"

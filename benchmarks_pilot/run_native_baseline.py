@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -16,7 +17,7 @@ from statistics import median
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PARAMETER_GOLF_ROOT = REPO_ROOT / "parameter-golf"
-LOCAL_BIN_DIR = REPO_ROOT / "local_bin"
+WSL_NVIDIA_DIR = Path("/usr/lib/wsl/lib")
 
 REF_4090_EGPU_BASELINE_TOK_PER_SEC = 598_000.0
 REF_8X_H100_TOK_PER_SEC = 1_350_000.0
@@ -128,8 +129,8 @@ def build_env(args: argparse.Namespace, variant: VariantConfig) -> dict[str, str
     )
     if args.eager:
         env["TORCHDYNAMO_DISABLE"] = "1"
-    if LOCAL_BIN_DIR.exists():
-        env["PATH"] = f"{LOCAL_BIN_DIR}:{env['PATH']}"
+    if shutil.which("nvidia-smi", path=env.get("PATH")) is None and (WSL_NVIDIA_DIR / "nvidia-smi").exists():
+        env["PATH"] = f"{WSL_NVIDIA_DIR}:{env['PATH']}"
     return env
 
 

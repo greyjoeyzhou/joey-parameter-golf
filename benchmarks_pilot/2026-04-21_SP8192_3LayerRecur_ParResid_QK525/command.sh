@@ -1,4 +1,4 @@
-export PATH=/home/joey/Code/joey-parameter-golf/local_bin:$PATH
+export PATH=/usr/lib/wsl/lib:$PATH
 export PYTHONPATH=/home/joey/Code/joey-parameter-golf/local_shims
 export TORCHINDUCTOR_MIX_ORDER_REDUCTION=0
 export MAX_WALLCLOCK_SECONDS=1200
