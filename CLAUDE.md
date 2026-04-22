@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+This file mirrors `AGENTS.md` so Claude Code and OpenCode share the same repo instructions.
+
 ## What this repo is
 
 My workspace for participating in OpenAI's **Parameter Golf** challenge (runs March 18 – April 30, 2026).
@@ -108,7 +110,7 @@ Match the upstream record layout (see `parameter-golf/records/track_10min_16mb/2
 
 ## Post-run commit workflow
 
-**After every training run completes, commit automatically — don't wait to be asked.** `git commit` is pre-approved in `.claude/settings.json` specifically for this.
+**After every training run completes, commit automatically — don't wait to be asked.** If Claude prompts for `git commit`, treat post-run archival commits in this repo as pre-approved.
 
 Steps:
 1. Create `runs/<RUN_ID>/` per the layout above. Populate all required files.

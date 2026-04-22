@@ -1,0 +1,16 @@
+{
+  "run_id": "2026-04-21_SP8192_ParResid_TTT",
+  "source_record": "2026-04-08_SP8192_ParallelResid_ScoreFirstTTT",
+  "status": "training_cap_captured",
+  "steps_completed": 26,
+  "train_wallclock_s": 1210.369,
+  "logged_tok_s_median": 26685.0,
+  "logged_step_ms_median": 29470.9,
+  "effective_tok_s": 16893.4,
+  "effective_step_ms": 46552.7,
+  "prequant_val_bpb": 3.15171502,
+  "quantized_val_bpb": 3.15215100,
+  "peak_mem_mib": 36225,
+  "bytes_total": 15959562,
+  "notes": "Updated SDPA-preferred shim path on 1x5090; wallclock cap reached before step 27."
+}

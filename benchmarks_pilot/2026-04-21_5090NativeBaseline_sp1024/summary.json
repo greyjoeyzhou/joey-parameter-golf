@@ -1,0 +1,39 @@
+{
+  "4090_reference_step_ms_equiv": 876.7357859531772,
+  "4090_reference_tok_per_sec": 598000.0,
+  "final_logged_step": 2000,
+  "final_logged_step_avg_ms": 622.72,
+  "final_logged_train_time_ms": 1245434.0,
+  "iterations": 2000,
+  "latest_quantized": {
+    "val_bpb": 1.29793484,
+    "val_loss": 2.1915086
+  },
+  "latest_val": {
+    "iterations": 2000.0,
+    "step": 2000.0,
+    "step_avg_ms": 622.72,
+    "train_time_ms": 1245434.0,
+    "val_bpb": 1.2965,
+    "val_loss": 2.1892
+  },
+  "mode": "compiled",
+  "peak_memory": {
+    "allocated_mib": 10191,
+    "reserved_mib": 10574
+  },
+  "percent_faster_vs_4090_reference": 40.71902060111348,
+  "percent_of_8x_h100_reference": 62.33331431071545,
+  "run_id": "2026-04-21_5090NativeBaseline_sp1024",
+  "seed": 1337,
+  "speedup_vs_4090_reference": 1.4071902060111348,
+  "steady_state_min_step": 100,
+  "steady_state_step_ms_median": 623.04,
+  "steady_state_tok_per_sec_median": 841499.7431946585,
+  "stop_event": null,
+  "train_batch_tokens": 524288,
+  "train_seq_len": 1024,
+  "trainer": "train_gpt.py",
+  "variant": "sp1024",
+  "warmup_steps": 20
+}

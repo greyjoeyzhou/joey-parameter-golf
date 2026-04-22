@@ -77,13 +77,11 @@
       "Bash(env)",
       "Bash(printenv:*)",
 
-      "Read(//Users/hang/Code/parameter-golf-experiments/**)",
-      "Read(//Users/hang/.claude/contexts/**)",
-      "Edit(//Users/hang/Code/parameter-golf-experiments/joey-parameter-golf/**)",
-      "Write(//Users/hang/Code/parameter-golf-experiments/joey-parameter-golf/**)"
+      "Read(./**)",
+      "Edit(./**)",
+      "Write(./**)"
     ],
     "deny": [
-      "Read(//Users/hang/Code/parameter-golf-experiments/joey-parameter-golf/.env)",
       "Read(**/.env)",
       "Read(**/.envrc)",
       "Read(**/*.pem)",

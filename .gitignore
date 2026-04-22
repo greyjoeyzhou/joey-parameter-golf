@@ -37,6 +37,7 @@ pip-wheel-metadata/
 .vscode/
 *.swp
 *.swo
+.opencode/
 
 # Dataset cache (lives under the submodule; never commit)
 parameter-golf/data/datasets/

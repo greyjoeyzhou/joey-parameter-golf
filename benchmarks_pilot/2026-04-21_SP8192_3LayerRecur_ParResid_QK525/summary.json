@@ -1,0 +1,16 @@
+{
+  "run_id": "2026-04-21_SP8192_3LayerRecur_ParResid_QK525",
+  "source_record": "2026-04-09_SP8192_3LayerRecur_ParResid_QK525_LegalTTT",
+  "status": "compile_bound_no_step",
+  "steps_completed": 0,
+  "train_wallclock_s": 1527.0,
+  "logged_tok_s_median": null,
+  "logged_step_ms_median": null,
+  "effective_tok_s": 0.0,
+  "effective_step_ms": null,
+  "prequant_val_bpb": null,
+  "quantized_val_bpb": null,
+  "peak_mem_mib": null,
+  "bytes_total": null,
+  "notes": "Still in warmup/loop warmup after 25m27s on 1x5090; manually stopped."
+}

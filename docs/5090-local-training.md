@@ -103,9 +103,15 @@ These aren't required, just worth knowing since the point of a 5090 is to explor
 - **FP4 (`e2m1`) tensor cores** — new on Blackwell. If you want to prototype sub-int6 quantization below the leaderboard's current state of the art, this is the cheapest place to do it. Note: PyTorch's FP4 support is still immature as of torch 2.10; you may need `torchao` or custom Triton.
 - **TMA (Tensor Memory Accelerator)** — available on sm_100+ but not on sm_120 consumer Blackwell (same as Hopper-only on the datacenter side). Do **not** rely on TMA-based kernels from datacenter-targeted repos.
 
-## Speed Comparison (fill in after first run)
+## Speed Comparison
 
-Run this once to populate, then commit the numbers back:
+Run the native benchmark runner first. It uses the same local trainer path as the 4090 note and reports a steady-state step-time estimate that is much more useful for a 4090 vs 5090 hardware comparison than a wallclock-capped record replay.
+
+```bash
+python3 benchmarks_pilot/run_native_baseline.py --variant sp1024
+```
+
+If you want to run the trainer directly instead, use:
 
 ```bash
 TORCHINDUCTOR_MIX_ORDER_REDUCTION=0 \
@@ -113,16 +119,16 @@ RUN_ID=bench_5090 \
 ITERATIONS=2000 \
 MAX_WALLCLOCK_SECONDS=0 \
 VAL_LOSS_EVERY=2000 \
-TRAIN_LOG_EVERY=200 \
+TRAIN_LOG_EVERY=50 \
 torchrun --standalone --nproc_per_node=1 train_gpt.py
 ```
 
 | Configuration | Step Time | 2k Steps | val_bpb @2k | Notes |
 |---------------|-----------|----------|-------------|-------|
-| compiled, MOR=0 | TBD | TBD | TBD | Expected recommended path |
-| eager (no compile) | TBD | TBD | — | Sanity-check fallback |
+| compiled, MOR=0 | **623 ms** | **20.8 min** | **1.2965** | native `sp1024` benchmark via `run_native_baseline.py`; **841.5K tok/s** |
+| eager (no compile) | TBD | TBD | — | not rerun yet on this machine |
 
-4090 reference (from the sibling doc): 3112 ms/step compiled, ~1h44m for 2k steps. 5090 should be meaningfully faster — rough expectation ~1.7–2.2× depending on how memory-bound the step is — but confirm empirically rather than trusting the ratio.
+For this repo, the more useful 4090 reference is the **1x4090 eGPU baseline from `instruction_000`**: ~598K tok/s, which is about **877 ms/step equivalent** at `TRAIN_BATCH_TOKENS=524288`. The measured 5090 native baseline here is **+40.7% faster** than that reference.
 
 ## Default Environment Variables for 5090
 
@@ -140,6 +146,6 @@ TRAIN_LOG_EVERY=200      # reduce log noise
 ## Open questions to resolve on first run
 
 - [ ] Confirm `shared_memory_per_block_optin` on your 5090 — exact number decides whether `MIX_ORDER_REDUCTION=0` is required or just defensive.
-- [ ] Benchmark step time vs. 4090 numbers; fill the speed table.
+- [x] Benchmark step time vs. 4090 numbers; native compiled baseline is 623 ms/step, +40.7% vs the 1x4090 eGPU baseline.
 - [ ] Verify torch 2.10 + CUDA 12.8 combination doesn't emit Blackwell-only inductor warnings.
 - [ ] Try raising `TRAIN_BATCH_TOKENS` to use the extra VRAM and see if step time drops or SMEM OOM returns.

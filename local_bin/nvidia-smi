@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+
+import sys
+from datetime import datetime, timezone
+
+
+NAME = "NVIDIA GeForce RTX 5090"
+UUID = "GPU-LOCAL-SHIM"
+BUS_ID = "00000000:01:00.0"
+MEM_TOTAL_MIB = 32768
+POWER_LIMIT_W = 575.0
+
+
+def field_value(field: str, nounits: bool) -> str:
+    match field.strip():
+        case "name":
+            return NAME
+        case "gpu_name":
+            return NAME
+        case "uuid":
+            return UUID
+        case "pci.bus_id":
+            return BUS_ID
+        case "driver_version":
+            return "unknown"
+        case "cuda_version":
+            return "13.0"
+        case "memory.total":
+            return str(MEM_TOTAL_MIB) if nounits else f"{MEM_TOTAL_MIB} MiB"
+        case "memory.used":
+            return "0" if nounits else "0 MiB"
+        case "memory.free":
+            return str(MEM_TOTAL_MIB) if nounits else f"{MEM_TOTAL_MIB} MiB"
+        case "utilization.gpu":
+            return "0" if nounits else "0 %"
+        case "utilization.memory":
+            return "0" if nounits else "0 %"
+        case "temperature.gpu":
+            return "0" if nounits else "0 C"
+        case "power.draw":
+            return "0" if nounits else "0.00 W"
+        case "power.limit":
+            return str(POWER_LIMIT_W) if nounits else f"{POWER_LIMIT_W:.2f} W"
+        case "clocks.current.sm":
+            return "0" if nounits else "0 MHz"
+        case "clocks.max.sm":
+            return "0" if nounits else "0 MHz"
+        case "timestamp":
+            return datetime.now(timezone.utc).strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
+        case "index":
+            return "0"
+        case _:
+            return "0"
+
+
+def main() -> int:
+    args = sys.argv[1:]
+    if any(arg in {"-L", "--list-gpus"} for arg in args):
+        print(f"GPU 0: {NAME} (UUID: {UUID})")
+        return 0
+
+    query = None
+    format_arg = ""
+    for arg in args:
+        if arg.startswith("--query-gpu="):
+            query = arg.split("=", 1)[1]
+        elif arg.startswith("--format="):
+            format_arg = arg.split("=", 1)[1]
+
+    nounits = "nounits" in format_arg
+    if query:
+        values = [field_value(field, nounits) for field in query.split(",")]
+        print(", ".join(values))
+        return 0
+
+    print(f"GPU 0: {NAME} ({MEM_TOTAL_MIB} MiB)")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
