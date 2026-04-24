@@ -32,6 +32,91 @@ The practical conclusion is:
 2. prioritize Casefold V2 over CaseOps for the next local no-TTT iteration
 3. only revisit CaseOps after reintroducing stronger stack components later
 
+## Winning Baseline: Exact Setup
+
+The winning baseline is not just "SP8192 + skip gates" in the abstract. It is a very specific localized version of the `2026-04-06` SP8192 script family with several features intentionally left on and several intentionally stripped out.
+
+### Kept from the source script family
+
+- `11` layers
+- `d_model=512`
+- `8` attention heads, `4` KV heads
+- `MLP_MULT=4.0`
+- tied embeddings
+- `QK_GAIN_INIT=4.0`
+- `xsa_last_n=11` (XSA on all layers in this script family)
+- Muon with row normalization
+- `MUON_WD=0.085`, `EMBED_WD=0.085`
+- EMA with `EMA_DECAY=0.997`
+- GPTQ quantization path
+- `MATRIX_BITS=6`, `EMBED_BITS=8`
+- SDClip-style quantization (`MATRIX_CLIP_SIGMAS=12.85`, `EMBED_CLIP_SIGMAS=20.0`)
+- `TRAIN_SEQ_LEN=2048`
+- `TRAIN_BATCH_TOKENS=786432`
+
+### Explicitly removed or disabled for the local baseline
+
+- `TTT_ENABLED=0`
+- `NUM_LOOPS=0`
+- `PARALLEL_RESIDUAL_START=-1`
+- `HESSIAN_CLIP_LAMBDA=0.0`
+
+### Explicitly enabled for the winning baseline
+
+- `SKIP_GATES_ENABLED=1`
+- `WARMUP_STEPS=1`
+- `GPTQ_CALIBRATION_BATCHES=1`
+
+### Why this baseline won
+
+It kept the strong modern SP8192 trainer skeleton, but removed the two local-5090 troublemakers:
+- recurrence / loops
+- parallel residuals
+
+Then it added one very small structural change:
+- learned skip gates in the decoder skip path
+
+That change is almost free in parameter terms. Comparing model parameter counts from the logs:
+
+- plain base: `35,938,904`
+- skip-gated base: `35,941,464`
+
+So the winning tweak only adds `2,560` parameters.
+
+### Local performance profile of the winning baseline
+
+From `runs/2026-04-22_SP8192_NoTTT_SkipGates30m/`:
+
+- steps completed before wallclock cap: `1049`
+- train wallclock to stop: `1,788,213 ms`
+- effective step time: about `1705 ms/step`
+- throughput during training: about `460-461k tok/s`
+- prequant `val_bpb`: `1.21760974`
+- quantized `val_bpb`: `1.22334557`
+- total submission bytes: `16,064,915`
+
+### What this suggests we should try next on the architecture side
+
+The baseline note should be detailed enough to support the next structural decisions. Based on tonight's sweep, the highest-EV architectural updates to test next are:
+
+1. **Skip gates + Hessian-aware SDClip**
+   - the source script already supports `HESSIAN_CLIP_LAMBDA`
+   - this is a zero-byte or near-zero-byte change worth testing on the winning base
+
+2. **Skip gates + Casefold V2 as the new default starting point**
+   - this is now the best local stack discovered in this session
+
+3. **Skip gates + a much lighter recurrence schedule**
+   - if recurrence is retried, it should be a later, weaker, or less frequent version than tonight's looped setup
+   - the current looped variant is too compile-heavy to be the anchor on 1x5090
+
+4. **Skip gates + parallel residuals**
+   - tonight only tested parallel residuals without skip gates
+   - it is still possible that skip gates stabilize the same regime enough to change the sign of the delta
+
+5. **QK-gain and optimizer micro-sweeps**
+   - `QK_GAIN_INIT`, `MUON_WD`, and related low-surface-area knobs remain available if we want cheaper local optimization before changing larger structure
+
 ## Method
 
 Base training script family:
@@ -105,6 +190,8 @@ Results:
 - prequant `val_bpb`: `1.21760974`
 - quantized `val_bpb`: `1.22334557`
 - peak VRAM: `27244 MiB`
+- steps completed: `1049`
+- effective step time: about `1705 ms/step`
 
 ### Candidate C: parallel-residual base
 
@@ -123,6 +210,8 @@ Results:
 - prequant `val_bpb`: `1.25513416`
 - quantized `val_bpb`: `1.26068845`
 - peak VRAM: `26670 MiB`
+- steps completed: `978`
+- effective step time: about `1830 ms/step`
 
 ### Architecture Ranking
 
@@ -153,11 +242,31 @@ Run:
 Tokenizer/data root:
 - `local_tokenizer_data/casefold_v2/` (ignored locally; not committed)
 
+Artifact source:
+- Hugging Face dataset: `Mikeapedia/fineweb10B-sp8192-casefold-v2`
+
+Local setup details:
+- tokenizer model copied locally as `local_tokenizer_data/casefold_v2/tokenizers/fineweb_8192_bpe.model`
+- original HF filename: `fineweb_8192_bpe_casefold_refined_v2.model`
+- local train shards used tonight: `fineweb_train_000000.bin` through `fineweb_train_000009.bin`
+- local validation shard: `fineweb_val_000000.bin`
+- no validation byte sidecar was used or required
+
+Execution details:
+- same winning architecture as the SP8192 skip-gated baseline
+- still `TTT_ENABLED=0`
+- still `NUM_LOOPS=0`
+- still no parallel residuals
+- `SLIDING_WINDOW_ENABLED=0` to keep the evaluation path simple and directly comparable through the wrapper
+- the sidecar wrapper script was still used, but on this dataset it falls back to the original token-byte LUT path because no `fineweb_val_bytes_*.bin` exists
+
 Results:
 - throughput: about `460-463k tok/s`
 - prequant `val_bpb`: `1.19837140`
 - quantized `val_bpb`: `1.20385604`
 - peak VRAM: `27244 MiB`
+- steps completed: `1047`
+- effective step time: about `1708 ms/step`
 
 Delta vs winning SP8192 baseline:
 - quantized improvement: `-0.01948953 bpb`
@@ -165,6 +274,10 @@ Delta vs winning SP8192 baseline:
 Interpretation:
 - Casefold V2 gives a clear, meaningful gain in the clean local no-TTT setting
 - it preserves throughput almost exactly
+
+Additional interpretation:
+- this is important because it means the gain is not coming from a slower or heavier local training regime
+- in this setup, Casefold V2 looks like a clean tokenizer improvement, not a throughput tradeoff disguised as a win
 
 ### CaseOps
 
@@ -174,11 +287,38 @@ Run:
 Tokenizer/data root:
 - `local_tokenizer_data/caseops_v1/` (ignored locally; not committed)
 
+Artifact source:
+- Hugging Face dataset: `romeerp/parameter-golf-caseops-v1`
+
+Local setup details:
+- tokenizer model copied locally as `local_tokenizer_data/caseops_v1/tokenizers/fineweb_8192_bpe.model`
+- original HF filename: `fineweb_8192_bpe_lossless_caps_caseops_v1_reserved.model`
+- local train shards used tonight: `fineweb_train_000000.bin` through `fineweb_train_000009.bin`
+- local validation shards:
+  - `fineweb_val_000000.bin`
+  - `fineweb_val_bytes_000000.bin`
+
+Wrapper details:
+- CaseOps could not be run safely on the unmodified source script because the stock `fineweb_val_*.bin` glob would also pick up `fineweb_val_bytes_*.bin`
+- `scripts/train_gpt_decode_sidecar.py` fixes this by:
+  - loading only token validation shards into `val_tokens`
+  - loading `fineweb_val_bytes_*.bin` separately as the byte denominator sidecar
+  - overriding `eval_val` so `val_bpb` is computed against original bytes instead of tokenizer-piece byte heuristics
+- `SLIDING_WINDOW_ENABLED=0` was kept off because only the standard validation path was patched for byte sidecar accounting in this local wrapper
+
+Execution details:
+- same winning architecture as the baseline and Casefold runs
+- still `TTT_ENABLED=0`
+- still `NUM_LOOPS=0`
+- still no parallel residuals
+
 Results:
 - throughput: about `454-456k tok/s`
 - prequant `val_bpb`: `1.21895652`
 - quantized `val_bpb`: `1.22397362`
 - peak VRAM: `27244 MiB`
+- steps completed: `1038`
+- effective step time: about `1724 ms/step`
 
 Delta vs winning SP8192 baseline:
 - quantized delta: `+0.00062805 bpb`
@@ -186,6 +326,11 @@ Delta vs winning SP8192 baseline:
 Interpretation:
 - CaseOps is effectively flat to slightly worse than the plain SP8192 baseline here
 - in this local no-TTT setup, CaseOps does not justify itself
+
+Additional interpretation:
+- the CaseOps run is still useful because it confirms the sidecar-aware local path works correctly on 1x5090
+- raw train loss is much lower than the SP8192 baseline, but that should not be over-interpreted across tokenizer families
+- the metric that matters here is `val_bpb` after correct original-byte accounting, and on that metric CaseOps did not beat the baseline in this regime
 
 ## Main Findings
 
