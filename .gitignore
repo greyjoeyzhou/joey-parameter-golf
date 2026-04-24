@@ -42,6 +42,7 @@ pip-wheel-metadata/
 # Dataset cache (lives under the submodule; never commit)
 parameter-golf/data/datasets/
 parameter-golf/data/tokenizers/
+local_tokenizer_data/
 
 # Model weights / checkpoints (commit only the final 16MB submission artifact, explicitly)
 *.pt
