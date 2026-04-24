@@ -139,6 +139,96 @@ All architecture comparisons used:
 - `GPTQ_CALIBRATION_BATCHES=1`
 - local 30-minute training cap followed by quantization/eval
 
+## Training And Quantization Stack
+
+The architecture summary is easier to reason about if the training and compression stack is documented explicitly.
+
+### Optimizer split
+
+This script family is not "Muon everywhere". It uses a mixed optimizer setup:
+
+- **Muon** for 2D matrix weights
+  - attention and MLP matrices
+  - `MATRIX_LR=0.02`
+  - `MUON_WD=0.085`
+  - row normalization enabled
+- **AdamW** for token embeddings
+  - `EMBED_LR=0.6`
+  - `EMBED_WD=0.085`
+- **AdamW** for scalar and control tensors
+  - `SCALAR_LR=0.02`
+  - `ADAM_WD=0.02`
+  - this includes norms, scales, residual-mix parameters, `q_gain`, and `skip_gates`
+- **Adam** for the untied LM head when present
+  - `HEAD_LR=0.008`
+
+So the right mental model is:
+
+- Muon-centered training for the heavy matrix parameters
+- Adam/AdamW for embeddings and low-dimensional control tensors
+
+### EMA
+
+All of tonight's successful runs kept EMA enabled:
+
+- `EMA_DECAY=0.997`
+
+The logged pre-quantization validation metric is the post-EMA result.
+
+### Quantization path
+
+We are **not** using QAT in this branch.
+
+What happens instead is:
+
+1. train in the normal floating-point path
+2. apply EMA
+3. collect Hessians on a short calibration set
+4. run mixed GPTQ quantization
+5. serialize the quantized artifact
+
+This means:
+
+- no fake-quantized forward pass during training
+- no QAT loss shaping
+- no quantization-aware training branch
+
+### Quantization layout
+
+The source script uses mixed post-training quantization:
+
+- most attention and MLP matrices: **GPTQ int6**
+- token embeddings: **int8**
+- selected control tensors remain passthrough float tensors
+  - `q_gain`
+  - attention scales
+  - MLP scales
+  - residual-mix tensors
+  - skip weights / skip gates when enabled
+
+Compression is then applied to the quantized artifact:
+
+- byte shuffle
+- Brotli
+
+### Why this matters for follow-up research
+
+Because tonight's winning branch is:
+
+- no TTT
+- no QAT
+- Muon-centered training
+- GPTQ-style post-training quantization
+
+the cleanest next experiments are:
+
+1. small optimizer / QK-gain / WD changes
+2. Hessian-aware clip tuning
+3. small structural changes
+4. tokenizer changes on top of the best structure
+
+It is **not** yet time to introduce QAT unless we intentionally start a new branch for that.
+
 ## Exploration Result
 
 Exploration run:
