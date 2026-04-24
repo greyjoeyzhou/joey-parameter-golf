@@ -250,3 +250,272 @@ Then test, in order:
 5. Casefold + SP10240
 
 That is the highest-EV continuation of the local research program right now.
+
+## Exact Run IDs And Commands
+
+All commands below assume:
+- working directory: repo root (`/home/joey/Code/joey-parameter-golf`)
+- runner: `scripts/run_local_experiment.py`
+- source trainer family: `2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py`
+- tokenizer/eval wrapper: `scripts/train_gpt_decode_sidecar.py`
+
+Shared source path used in every command:
+
+```bash
+SOURCE_TRAIN_GPT=/home/joey/Code/joey-parameter-golf/parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py
+```
+
+### Base command template
+
+All concrete commands below expand this same baseline pattern:
+
+```bash
+python3 scripts/run_local_experiment.py \
+  --run-id <RUN_ID> \
+  --source-script scripts/train_gpt_decode_sidecar.py \
+  --snapshot parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py \
+  --shim-flash-attn \
+  --copy-logfile \
+  --timeout-seconds <TIMEOUT> \
+  --env "SOURCE_TRAIN_GPT=$SOURCE_TRAIN_GPT" \
+  --env "VOCAB_SIZE=<VOCAB>" \
+  --env "DATA_DIR=<DATA_DIR>" \
+  --env "MAX_WALLCLOCK_SECONDS=<RUN_SECONDS>" \
+  --env "WARMUP_STEPS=1" \
+  --env "TRAIN_LOG_EVERY=<TRAIN_LOG_EVERY>" \
+  --env "VAL_LOSS_EVERY=0" \
+  --env "SLIDING_WINDOW_ENABLED=0" \
+  --env "TTT_ENABLED=0" \
+  --env "NUM_LOOPS=<NUM_LOOPS>" \
+  --env "PARALLEL_RESIDUAL_START=<PARALLEL_START>" \
+  --env "HESSIAN_CLIP_LAMBDA=<HESSIAN_CLIP_LAMBDA>" \
+  --env "SKIP_GATES_ENABLED=1" \
+  --env "QK_GAIN_INIT=<QK_GAIN_INIT>" \
+  --env "GPTQ_CALIBRATION_BATCHES=1"
+```
+
+### 1. Casefold V2 + SkipGates + HessianClip 0.15
+
+Run ID:
+- `2026-04-24_CasefoldV2_SkipGates_HessClip015`
+
+Command:
+
+```bash
+SOURCE_TRAIN_GPT=/home/joey/Code/joey-parameter-golf/parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py
+python3 scripts/run_local_experiment.py \
+  --run-id 2026-04-24_CasefoldV2_SkipGates_HessClip015 \
+  --source-script scripts/train_gpt_decode_sidecar.py \
+  --snapshot parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py \
+  --shim-flash-attn \
+  --copy-logfile \
+  --timeout-seconds 2100 \
+  --env "SOURCE_TRAIN_GPT=$SOURCE_TRAIN_GPT" \
+  --env "VOCAB_SIZE=8192" \
+  --env "DATA_DIR=../local_tokenizer_data/casefold_v2" \
+  --env "MAX_WALLCLOCK_SECONDS=1800" \
+  --env "WARMUP_STEPS=1" \
+  --env "TRAIN_LOG_EVERY=50" \
+  --env "VAL_LOSS_EVERY=0" \
+  --env "SLIDING_WINDOW_ENABLED=0" \
+  --env "TTT_ENABLED=0" \
+  --env "NUM_LOOPS=0" \
+  --env "PARALLEL_RESIDUAL_START=-1" \
+  --env "HESSIAN_CLIP_LAMBDA=0.15" \
+  --env "SKIP_GATES_ENABLED=1" \
+  --env "QK_GAIN_INIT=4.0" \
+  --env "GPTQ_CALIBRATION_BATCHES=1"
+```
+
+### 2. Casefold V2 + SkipGates + QK gain 4.5
+
+Run ID:
+- `2026-04-24_CasefoldV2_SkipGates_QKGain45`
+
+Command:
+
+```bash
+SOURCE_TRAIN_GPT=/home/joey/Code/joey-parameter-golf/parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py
+python3 scripts/run_local_experiment.py \
+  --run-id 2026-04-24_CasefoldV2_SkipGates_QKGain45 \
+  --source-script scripts/train_gpt_decode_sidecar.py \
+  --snapshot parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py \
+  --shim-flash-attn \
+  --copy-logfile \
+  --timeout-seconds 2100 \
+  --env "SOURCE_TRAIN_GPT=$SOURCE_TRAIN_GPT" \
+  --env "VOCAB_SIZE=8192" \
+  --env "DATA_DIR=../local_tokenizer_data/casefold_v2" \
+  --env "MAX_WALLCLOCK_SECONDS=1800" \
+  --env "WARMUP_STEPS=1" \
+  --env "TRAIN_LOG_EVERY=50" \
+  --env "VAL_LOSS_EVERY=0" \
+  --env "SLIDING_WINDOW_ENABLED=0" \
+  --env "TTT_ENABLED=0" \
+  --env "NUM_LOOPS=0" \
+  --env "PARALLEL_RESIDUAL_START=-1" \
+  --env "HESSIAN_CLIP_LAMBDA=0.0" \
+  --env "SKIP_GATES_ENABLED=1" \
+  --env "QK_GAIN_INIT=4.5" \
+  --env "GPTQ_CALIBRATION_BATCHES=1"
+```
+
+### 3. Casefold V2 + SkipGates + ParallelResidual
+
+Run ID:
+- `2026-04-24_CasefoldV2_SkipGates_ParResid`
+
+Command:
+
+```bash
+SOURCE_TRAIN_GPT=/home/joey/Code/joey-parameter-golf/parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py
+python3 scripts/run_local_experiment.py \
+  --run-id 2026-04-24_CasefoldV2_SkipGates_ParResid \
+  --source-script scripts/train_gpt_decode_sidecar.py \
+  --snapshot parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py \
+  --shim-flash-attn \
+  --copy-logfile \
+  --timeout-seconds 2100 \
+  --env "SOURCE_TRAIN_GPT=$SOURCE_TRAIN_GPT" \
+  --env "VOCAB_SIZE=8192" \
+  --env "DATA_DIR=../local_tokenizer_data/casefold_v2" \
+  --env "MAX_WALLCLOCK_SECONDS=1800" \
+  --env "WARMUP_STEPS=1" \
+  --env "TRAIN_LOG_EVERY=50" \
+  --env "VAL_LOSS_EVERY=0" \
+  --env "SLIDING_WINDOW_ENABLED=0" \
+  --env "TTT_ENABLED=0" \
+  --env "NUM_LOOPS=0" \
+  --env "PARALLEL_RESIDUAL_START=7" \
+  --env "HESSIAN_CLIP_LAMBDA=0.0" \
+  --env "SKIP_GATES_ENABLED=1" \
+  --env "QK_GAIN_INIT=4.0" \
+  --env "GPTQ_CALIBRATION_BATCHES=1"
+```
+
+### 4. Casefold V2 + SkipGates + QK gain 5.0
+
+Run ID:
+- `2026-04-24_CasefoldV2_SkipGates_QKGain50`
+
+Command:
+
+```bash
+SOURCE_TRAIN_GPT=/home/joey/Code/joey-parameter-golf/parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py
+python3 scripts/run_local_experiment.py \
+  --run-id 2026-04-24_CasefoldV2_SkipGates_QKGain50 \
+  --source-script scripts/train_gpt_decode_sidecar.py \
+  --snapshot parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py \
+  --shim-flash-attn \
+  --copy-logfile \
+  --timeout-seconds 2100 \
+  --env "SOURCE_TRAIN_GPT=$SOURCE_TRAIN_GPT" \
+  --env "VOCAB_SIZE=8192" \
+  --env "DATA_DIR=../local_tokenizer_data/casefold_v2" \
+  --env "MAX_WALLCLOCK_SECONDS=1800" \
+  --env "WARMUP_STEPS=1" \
+  --env "TRAIN_LOG_EVERY=50" \
+  --env "VAL_LOSS_EVERY=0" \
+  --env "SLIDING_WINDOW_ENABLED=0" \
+  --env "TTT_ENABLED=0" \
+  --env "NUM_LOOPS=0" \
+  --env "PARALLEL_RESIDUAL_START=-1" \
+  --env "HESSIAN_CLIP_LAMBDA=0.0" \
+  --env "SKIP_GATES_ENABLED=1" \
+  --env "QK_GAIN_INIT=5.0" \
+  --env "GPTQ_CALIBRATION_BATCHES=1"
+```
+
+### 5. Casefold V2 + SkipGates + recurrence-lite smoke
+
+Run ID:
+- `2026-04-24_CasefoldV2_SkipGates_RecurLite_smoke`
+
+Command:
+
+```bash
+SOURCE_TRAIN_GPT=/home/joey/Code/joey-parameter-golf/parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py
+python3 scripts/run_local_experiment.py \
+  --run-id 2026-04-24_CasefoldV2_SkipGates_RecurLite_smoke \
+  --source-script scripts/train_gpt_decode_sidecar.py \
+  --snapshot parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py \
+  --shim-flash-attn \
+  --copy-logfile \
+  --timeout-seconds 900 \
+  --env "SOURCE_TRAIN_GPT=$SOURCE_TRAIN_GPT" \
+  --env "VOCAB_SIZE=8192" \
+  --env "DATA_DIR=../local_tokenizer_data/casefold_v2" \
+  --env "MAX_WALLCLOCK_SECONDS=600" \
+  --env "WARMUP_STEPS=1" \
+  --env "TRAIN_LOG_EVERY=20" \
+  --env "VAL_LOSS_EVERY=0" \
+  --env "SLIDING_WINDOW_ENABLED=0" \
+  --env "TTT_ENABLED=0" \
+  --env "NUM_LOOPS=1" \
+  --env "LOOP_START=4" \
+  --env "LOOP_END=5" \
+  --env "ENABLE_LOOPING_AT=0.0" \
+  --env "LOOP_PHASE2_AT=0.0" \
+  --env "UNTIE_LOOP_MLPS=0" \
+  --env "PARALLEL_RESIDUAL_START=-1" \
+  --env "HESSIAN_CLIP_LAMBDA=0.0" \
+  --env "SKIP_GATES_ENABLED=1" \
+  --env "QK_GAIN_INIT=4.0" \
+  --env "GPTQ_CALIBRATION_BATCHES=1"
+```
+
+### 6. Optional: bootstrap Casefold + SP10240 local data
+
+Only needed if `local_tokenizer_data/casefold_sp10240/` does not already exist.
+
+Bootstrap command:
+
+```bash
+"parameter-golf/.venv312x/bin/python" -c "import os, shutil; from pathlib import Path; from huggingface_hub import hf_hub_download; root=Path('local_tokenizer_data/casefold_sp10240'); ds=root/'datasets'/'fineweb10B_sp10240'; tok=root/'tokenizers'; ds.mkdir(parents=True, exist_ok=True); tok.mkdir(parents=True, exist_ok=True); files=[('MissGlitterToken/sp10240_casefold', '.', 'fineweb_10240_casefold_bpe.model', tok/'fineweb_10240_bpe.model'), ('MissGlitterToken/sp10240_casefold', '.', 'fineweb_val_000000.bin', ds/'fineweb_val_000000.bin')] + [('MissGlitterToken/sp10240_casefold', '.', f'fineweb_train_{i:06d}.bin', ds/f'fineweb_train_{i:06d}.bin') for i in range(10)];
+for repo, subfolder, filename, dest in files:
+  src=Path(hf_hub_download(repo_id=repo, filename=filename, subfolder=None if subfolder=='.' else subfolder, repo_type='dataset')).resolve();
+  if dest.exists(): continue
+  try: os.link(src, dest)
+  except OSError: shutil.copy2(src, dest)
+  print(dest)"
+```
+
+### 7. Optional: Casefold + SP10240 on the best structure
+
+Run ID:
+- `2026-04-24_CasefoldSP10240_SkipGates30m`
+
+Command:
+
+```bash
+SOURCE_TRAIN_GPT=/home/joey/Code/joey-parameter-golf/parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py
+python3 scripts/run_local_experiment.py \
+  --run-id 2026-04-24_CasefoldSP10240_SkipGates30m \
+  --source-script scripts/train_gpt_decode_sidecar.py \
+  --snapshot parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py \
+  --shim-flash-attn \
+  --copy-logfile \
+  --timeout-seconds 2100 \
+  --env "SOURCE_TRAIN_GPT=$SOURCE_TRAIN_GPT" \
+  --env "VOCAB_SIZE=10240" \
+  --env "DATA_DIR=../local_tokenizer_data/casefold_sp10240" \
+  --env "MAX_WALLCLOCK_SECONDS=1800" \
+  --env "WARMUP_STEPS=1" \
+  --env "TRAIN_LOG_EVERY=50" \
+  --env "VAL_LOSS_EVERY=0" \
+  --env "SLIDING_WINDOW_ENABLED=0" \
+  --env "TTT_ENABLED=0" \
+  --env "NUM_LOOPS=0" \
+  --env "PARALLEL_RESIDUAL_START=-1" \
+  --env "HESSIAN_CLIP_LAMBDA=0.0" \
+  --env "SKIP_GATES_ENABLED=1" \
+  --env "QK_GAIN_INIT=4.0" \
+  --env "GPTQ_CALIBRATION_BATCHES=1"
+```
+
+## Suggested Stop Rules
+
+- If run 1 (`HessClip015`) is clearly positive, keep that as the new default before judging runs 2-5.
+- If run 3 (`ParResid`) is still negative under Casefold, stop spending time on parallel residuals locally.
+- If run 5 (`RecurLite_smoke`) does not get into healthy training quickly, stop recurrence work for now on 1x5090.
+- Only run the SP10240 branch after at least one of runs 1-4 lands cleanly.
