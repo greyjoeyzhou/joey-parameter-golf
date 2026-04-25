@@ -219,6 +219,88 @@ So the best continuation is still:
 not:
 - larger casefold vocab
 
+### 6. Why Casefold seems to beat CaseOps locally
+
+This is the main tokenizer interpretation question raised by the local runs.
+
+At a high level:
+
+- **Casefold removes distinctions**
+- **CaseOps re-encodes distinctions**
+
+That sounds subtle, but for this competition setup it is a major difference.
+
+#### Casefold
+
+Casefold is a lossy normalization route.
+
+Its strength in parameter-golf is that it directly buys:
+- coverage gain
+- parameter-density gain
+
+In practice that means:
+- fewer duplicated embedding rows for case variants
+- more training exposure per surviving row
+- fewer tokens spent on distinctions the model may not have time to learn well anyway
+
+In the short-budget local regime, that is exactly the kind of simplification that should help.
+
+#### CaseOps
+
+CaseOps is lossless and bijective.
+
+Its strength is conceptual cleanliness:
+- exact reversibility
+- strong original-byte accounting story
+- cleaner compliance intuition
+
+But the model does not get that for free. It now has to learn a mini control language:
+- `<TITLE>the`
+- `<ALLCAPS>nasa`
+- `<CAPNEXT>` patterns
+
+So even though the transformation is elegant, the learning problem can be harder.
+
+#### Why this likely favors Casefold on our current branch
+
+Our local branch is intentionally simple:
+- no TTT
+- no recurrence
+- short wallclock
+- small structural improvements only
+
+That is the regime where I would expect a tokenizer that **reduces learning burden immediately** to win.
+
+Casefold does that.
+CaseOps preserves more information, but also preserves more work for the model.
+
+#### Another important caveat: artifact quality is not equal
+
+We are also not comparing two equally engineered tokenizer artifacts.
+
+Casefold V2 includes:
+- slot cleanup
+- BPB-scored refill
+- punctuation swap
+- unigram / Viterbi decoding
+- byte-fallback reduction
+
+CaseOps v1 is cleaner conceptually, but less aggressively optimized as a tokenizer artifact.
+
+So part of the observed gap may simply be:
+- the Casefold tokenizer artifact is currently better tuned for this benchmark than the CaseOps artifact we tested
+
+#### Current hypothesis
+
+The best current interpretation is:
+
+- **Casefold is the right default tokenizer branch for local no-TTT work**
+- **CaseOps should only be revisited once the surrounding architecture is stronger**
+
+That matches both:
+- the local empirical results in this repo
+- the upstream pattern where the strongest CaseOps result sits on top of a much stronger stack than the one we intentionally used locally
+
 ## Recommended New Default
 
 Promote this branch to the new local default:
