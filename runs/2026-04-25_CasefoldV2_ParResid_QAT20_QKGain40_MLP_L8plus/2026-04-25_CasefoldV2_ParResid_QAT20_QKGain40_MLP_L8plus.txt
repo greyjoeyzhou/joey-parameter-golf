@@ -1,0 +1,174 @@
+====================================================================================================
+Hyperparameters:
+  adam_eps: 1e-08
+  adam_wd: 0.02
+  beta1: 0.9
+  beta2: 0.95
+  clip_mult_early: 1.0
+  clip_mult_late: 1.0
+  clip_mult_loop: 1.0
+  clip_mult_mid: 1.0
+  compressor: brotli
+  data_dir: ../local_tokenizer_data/casefold_v2
+  datasets_dir: ../local_tokenizer_data/casefold_v2/datasets/fineweb10B_sp8192
+  distributed: True
+  ema_decay: 0.997
+  embed_bits: 8
+  embed_clip_sigmas: 20.0
+  embed_lr: 0.6
+  embed_wd: 0.085
+  embedding_dim: 512
+  enable_looping_at: 0.5
+  eval_seq_len: 2048
+  eval_stride: 64
+  gptq_calibration_batches: 1
+  gptq_reserve_seconds: 12.0
+  grad_accum_steps: 8
+  grad_clip_norm: 0.3
+  head_lr: 0.008
+  hessian_clip_lambda: 0.15
+  is_main_process: True
+  iterations: 20000
+  ln_scale: True
+  local_rank: 0
+  logfile: logs/2026-04-25_CasefoldV2_ParResid_QAT20_QKGain40_MLP_L8plus.txt
+  logit_softcap: 30.0
+  loop_end: 5
+  loop_layer_bits: 0
+  loop_layer_clip_sigmas: 0.0
+  loop_phase2_at: 0.0
+  loop_start: 4
+  matrix_bits: 6
+  matrix_clip_sigmas: 12.85
+  matrix_lr: 0.02
+  max_wallclock_seconds: 1800.0
+  min_lr: 0.0
+  mlp_mult: 4.0
+  model_dim: 512
+  model_path: final_model.pt
+  muon_backend_steps: 5
+  muon_beta2: 0.95
+  muon_momentum: 0.99
+  muon_momentum_warmup_start: 0.92
+  muon_momentum_warmup_steps: 1500
+  muon_row_normalize: True
+  muon_wd: 0.085
+  num_heads: 8
+  num_kv_heads: 4
+  num_layers: 11
+  num_loops: 0
+  parallel_residual_start: 7
+  qk_gain_init: 4.0
+  quantized_model_path: final_model.int6.ptz
+  rank: 0
+  rope_base: 10000.0
+  rope_dims: 16
+  rope_train_seq_len: 2048
+  run_id: 2026-04-25_CasefoldV2_ParResid_QAT20_QKGain40_MLP_L8plus
+  scalar_lr: 0.02
+  seed: 1337
+  skip_gates_enabled: True
+  sliding_window_enabled: False
+  tie_embeddings: True
+  tied_embed_init_std: 0.005
+  tied_embed_lr: 0.03
+  tokenizer_path: ../local_tokenizer_data/casefold_v2/tokenizers/fineweb_8192_bpe.model
+  train_batch_tokens: 786432
+  train_files: ../local_tokenizer_data/casefold_v2/datasets/fineweb10B_sp8192/fineweb_train_*.bin
+  train_log_every: 50
+  train_seq_len: 2048
+  ttt_chunk_tokens: 32768
+  ttt_enabled: False
+  ttt_entropy_high: 2.1
+  ttt_entropy_low: 1.75
+  ttt_epochs: 4
+  ttt_freeze_blocks: 2
+  ttt_lr: 0.0005
+  ttt_ns_steps: 3
+  untie_loop_mlps: False
+  val_batch_tokens: 524288
+  val_files: ../local_tokenizer_data/casefold_v2/datasets/fineweb10B_sp8192/fineweb_val_*.bin
+  val_loss_every: 0
+  vocab_size: 8192
+  warmdown_frac: 0.667
+  warmup_steps: 1
+  world_size: 1
+  xsa_last_n: 11
+====================================================================================================
+Running Python 3.12.13 (main, Apr  7 2026, 20:45:25) [Clang 22.1.1 ]
+Running PyTorch 2.11.0+cu130
+Sat Apr 25 15:48:59 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.57                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5090        On  |   00000000:01:00.0 Off |                  N/A |
+| 41%   48C    P1             36W /  600W |    1094MiB /  32607MiB |      4%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A          405275      C   /python3.12                           N/A      |
++-----------------------------------------------------------------------------------------+
+
+====================================================================================================
+train_shards: 10
+val_tokens: 36286464
+model_params:35941464
+hessian_clip: lambda=0.15
+parallel_residuals: ON (layers 7-10)
+qat:enabled fraction=0.200 ramp_steps=500 alpha=(1.0->16.0) target=mlp layers=8-10
+qat:modules 6 -> blocks.8.mlp.fc, blocks.8.mlp.proj, blocks.9.mlp.fc, blocks.9.mlp.proj, blocks.10.mlp.fc, blocks.10.mlp.proj
+gptq:reserving 12s, effective=1788000ms
+warmup_step: 1/1
+1/20000 train_loss: 9.0181 train_time: 0.0m tok/s: 474758 looping:False
+2/20000 train_loss: 12.3831 train_time: 0.1m tok/s: 473939 looping:False
+3/20000 train_loss: 11.4416 train_time: 0.1m tok/s: 473837 looping:False
+4/20000 train_loss: 9.8618 train_time: 0.1m tok/s: 473704 looping:False
+5/20000 train_loss: 8.7152 train_time: 0.1m tok/s: 468621 looping:False
+50/20000 train_loss: 5.4907 train_time: 1.4m tok/s: 463367 looping:False
+100/20000 train_loss: 4.8754 train_time: 2.8m tok/s: 462602 looping:False
+150/20000 train_loss: 4.3063 train_time: 4.3m tok/s: 462207 looping:False
+200/20000 train_loss: 4.0186 train_time: 5.7m tok/s: 462933 looping:False
+250/20000 train_loss: 3.9243 train_time: 7.1m tok/s: 459539 looping:False
+300/20000 train_loss: 3.8240 train_time: 8.5m tok/s: 460212 looping:False
+350/20000 train_loss: 3.7576 train_time: 10.0m tok/s: 460968 looping:False
+400/20000 train_loss: 3.6834 train_time: 11.4m tok/s: 461691 looping:False
+450/20000 train_loss: 3.6455 train_time: 12.8m tok/s: 462501 looping:False
+500/20000 train_loss: 3.6152 train_time: 14.2m tok/s: 463059 looping:False
+550/20000 train_loss: 3.5641 train_time: 15.6m tok/s: 463181 looping:False
+600/20000 train_loss: 3.5517 train_time: 17.0m tok/s: 463127 looping:False
+650/20000 train_loss: 3.5299 train_time: 18.4m tok/s: 463514 looping:False
+700/20000 train_loss: 3.4851 train_time: 19.8m tok/s: 463851 looping:False
+750/20000 train_loss: 3.4817 train_time: 21.2m tok/s: 463897 looping:False
+800/20000 train_loss: 3.4353 train_time: 22.6m tok/s: 464196 looping:False
+late_qat:enabled step:846 frac:0.801
+850/20000 train_loss: 3.4151 train_time: 24.0m tok/s: 464084 looping:False
+900/20000 train_loss: 3.3970 train_time: 25.4m tok/s: 464325 looping:False
+950/20000 train_loss: 3.3709 train_time: 26.8m tok/s: 464222 looping:False
+1000/20000 train_loss: 3.3579 train_time: 28.2m tok/s: 464265 looping:False
+1050/20000 train_loss: 3.3809 train_time: 29.6m tok/s: 464307 looping:False
+1056/20000 val_loss: 3.3434 val_bpb: 1.1585
+stopping_early: wallclock_cap train_time: 1788538ms step: 1056/20000
+peak memory allocated: 27053 MiB reserved: 27160 MiB
+ema:applying EMA weights
+pre-quantization post-ema val_loss:3.45368410 val_bpb:1.19672420 eval_time:27066ms
+Serialized model: 135418745 bytes
+Code size: 80055 bytes
+GPTQ:collecting Hessians from calibration data...
+GPTQ:collected 67 Hessians in 0.5s
+GPTQ:saved Hessian diagnostics to hessian_diagnostics.pt (67 matrices)
+Quantized weights:
+  gptq (int6): blocks.attn.c_k.weight, blocks.attn.c_q.weight, blocks.attn.c_v.weight, blocks.attn.proj.weight, blocks.mlp.fc.weight, blocks.mlp.proj.weight
+  gptq (int8): tok_emb.weight
+  passthrough (float16): blocks.attn.q_gain, blocks.attn_scale, blocks.mlp_scale, blocks.resid_mix, skip_gates, skip_weights
+Serialized model quantized+brotli: 15988560 bytes
+Total submission size quantized+brotli: 16068615 bytes
+quantized val_loss:3.46903075 val_bpb:1.20204191 eval_time:28547ms
