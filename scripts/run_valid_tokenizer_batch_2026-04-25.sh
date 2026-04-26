@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+set -u
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+SOURCE_TRAIN_GPT="$ROOT/parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py"
+SNAPSHOT_PATH="parameter-golf/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence/train_gpt_decode.py"
+BATCH_DIR="$ROOT/runs/2026-04-25_ValidTokenizerBatch"
+STATUS_FILE="$BATCH_DIR/status.tsv"
+METADATA_FILE="$BATCH_DIR/metadata.tsv"
+SUMMARY_FILE="$ROOT/notes/local-valid-tokenizer-comparison-2026-04-25.md"
+
+mkdir -p "$BATCH_DIR"
+printf 'run_id\tstatus\tstarted_at\tfinished_at\n' > "$STATUS_FILE"
+printf 'run_id\ttokenizer\tstack\tmode\n' > "$METADATA_FILE"
+
+register_case() {
+  printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" >> "$METADATA_FILE"
+}
+
+register_case "2026-04-25_SP8192_Base_Valid" "SP8192" "Base" "non_qat"
+register_case "2026-04-25_CaseOps_Base_Valid" "CaseOps" "Base" "non_qat"
+register_case "2026-04-25_SP8192_SkipGates_Valid" "SP8192" "SkipGates" "non_qat"
+register_case "2026-04-25_CaseOps_SkipGates_Valid" "CaseOps" "SkipGates" "non_qat"
+register_case "2026-04-25_SP8192_SkipGates_ParResid_Valid" "SP8192" "SkipGates_ParResid" "non_qat"
+register_case "2026-04-25_CaseOps_SkipGates_ParResid_Valid" "CaseOps" "SkipGates_ParResid" "non_qat"
+register_case "2026-04-25_SP8192_SkipGates_ParResid_QKGain45_HessClip015_Valid" "SP8192" "SkipGates_ParResid_QKGain45_HessClip015" "non_qat"
+register_case "2026-04-25_CaseOps_SkipGates_ParResid_QKGain45_HessClip015_Valid" "CaseOps" "SkipGates_ParResid_QKGain45_HessClip015" "non_qat"
+register_case "2026-04-25_SP8192_SkipGates_ParResid_QAT10_QKGain40_Valid" "SP8192" "SkipGates_ParResid_QAT10_QKGain40" "qat"
+register_case "2026-04-25_CaseOps_SkipGates_ParResid_QAT10_QKGain40_Valid" "CaseOps" "SkipGates_ParResid_QAT10_QKGain40" "qat"
+register_case "2026-04-25_SP8192_SkipGates_ParResid_QAT20_QKGain40_MLPOnly_Valid" "SP8192" "SkipGates_ParResid_QAT20_QKGain40_MLPOnly" "qat"
+register_case "2026-04-25_CaseOps_SkipGates_ParResid_QAT20_QKGain40_MLPOnly_Valid" "CaseOps" "SkipGates_ParResid_QAT20_QKGain40_MLPOnly" "qat"
+
+COMMON_ENVS=(
+  "SOURCE_TRAIN_GPT=$SOURCE_TRAIN_GPT"
+  "VOCAB_SIZE=8192"
+  "MAX_WALLCLOCK_SECONDS=1800"
+  "WARMUP_STEPS=1"
+  "TRAIN_LOG_EVERY=50"
+  "VAL_LOSS_EVERY=0"
+  "SLIDING_WINDOW_ENABLED=0"
+  "TTT_ENABLED=0"
+  "NUM_LOOPS=0"
+  "GPTQ_CALIBRATION_BATCHES=1"
+)
+
+update_summary() {
+  python3 "scripts/summarize_valid_tokenizer_batch.py" --metadata-file "$METADATA_FILE" --status-file "$STATUS_FILE" --output "$SUMMARY_FILE"
+}
+
+run_case() {
+  local run_id="$1"
+  local source_script="$2"
+  local data_dir="$3"
+  shift 3
+  local started_at finished_at rc
+  started_at="$(date -Iseconds)"
+  echo "[$started_at] START $run_id"
+
+  local cmd=(
+    python3 "scripts/run_local_experiment.py"
+    --run-id "$run_id"
+    --source-script "$source_script"
+    --snapshot "$SNAPSHOT_PATH"
+    --shim-flash-attn
+    --copy-logfile
+    --timeout-seconds 2100
+    --env "DATA_DIR=$data_dir"
+  )
+
+  local kv
+  for kv in "${COMMON_ENVS[@]}"; do
+    cmd+=(--env "$kv")
+  done
+  for kv in "$@"; do
+    cmd+=(--env "$kv")
+  done
+
+  "${cmd[@]}"
+  rc=$?
+  finished_at="$(date -Iseconds)"
+  if [[ $rc -eq 0 ]]; then
+    printf '%s\t%s\t%s\t%s\n' "$run_id" "ok" "$started_at" "$finished_at" >> "$STATUS_FILE"
+  else
+    printf '%s\t%s\t%s\t%s\n' "$run_id" "rc=$rc" "$started_at" "$finished_at" >> "$STATUS_FILE"
+  fi
+  update_summary
+  echo "[$finished_at] END $run_id rc=$rc"
+  return 0
+}
+
+update_summary
+
+run_case "2026-04-25_SP8192_Base_Valid" "scripts/train_gpt_decode_sidecar.py" "./data" "SKIP_GATES_ENABLED=0" "PARALLEL_RESIDUAL_START=-1" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.0"
+run_case "2026-04-25_CaseOps_Base_Valid" "scripts/train_gpt_decode_sidecar.py" "../local_tokenizer_data/caseops_v1" "SKIP_GATES_ENABLED=0" "PARALLEL_RESIDUAL_START=-1" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.0"
+
+run_case "2026-04-25_SP8192_SkipGates_Valid" "scripts/train_gpt_decode_sidecar.py" "./data" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=-1" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.0"
+run_case "2026-04-25_CaseOps_SkipGates_Valid" "scripts/train_gpt_decode_sidecar.py" "../local_tokenizer_data/caseops_v1" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=-1" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.0"
+
+run_case "2026-04-25_SP8192_SkipGates_ParResid_Valid" "scripts/train_gpt_decode_sidecar.py" "./data" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=7" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.0"
+run_case "2026-04-25_CaseOps_SkipGates_ParResid_Valid" "scripts/train_gpt_decode_sidecar.py" "../local_tokenizer_data/caseops_v1" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=7" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.0"
+
+run_case "2026-04-25_SP8192_SkipGates_ParResid_QKGain45_HessClip015_Valid" "scripts/train_gpt_decode_sidecar.py" "./data" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=7" "QK_GAIN_INIT=4.5" "HESSIAN_CLIP_LAMBDA=0.15"
+run_case "2026-04-25_CaseOps_SkipGates_ParResid_QKGain45_HessClip015_Valid" "scripts/train_gpt_decode_sidecar.py" "../local_tokenizer_data/caseops_v1" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=7" "QK_GAIN_INIT=4.5" "HESSIAN_CLIP_LAMBDA=0.15"
+
+run_case "2026-04-25_SP8192_SkipGates_ParResid_QAT10_QKGain40_Valid" "scripts/train_gpt_decode_qat.py" "./data" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=7" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.15" "QAT_ENABLED=1" "QAT_FRACTION=0.10" "QAT_RAMP_STEPS=500" "QAT_TARGET=all" "QAT_LAYER_START=0" "QAT_LAYER_END=10"
+run_case "2026-04-25_CaseOps_SkipGates_ParResid_QAT10_QKGain40_Valid" "scripts/train_gpt_decode_qat.py" "../local_tokenizer_data/caseops_v1" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=7" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.15" "QAT_ENABLED=1" "QAT_FRACTION=0.10" "QAT_RAMP_STEPS=500" "QAT_TARGET=all" "QAT_LAYER_START=0" "QAT_LAYER_END=10"
+
+run_case "2026-04-25_SP8192_SkipGates_ParResid_QAT20_QKGain40_MLPOnly_Valid" "scripts/train_gpt_decode_qat.py" "./data" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=7" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.15" "QAT_ENABLED=1" "QAT_FRACTION=0.20" "QAT_RAMP_STEPS=500" "QAT_TARGET=mlp" "QAT_LAYER_START=0" "QAT_LAYER_END=10"
+run_case "2026-04-25_CaseOps_SkipGates_ParResid_QAT20_QKGain40_MLPOnly_Valid" "scripts/train_gpt_decode_qat.py" "../local_tokenizer_data/caseops_v1" "SKIP_GATES_ENABLED=1" "PARALLEL_RESIDUAL_START=7" "QK_GAIN_INIT=4.0" "HESSIAN_CLIP_LAMBDA=0.15" "QAT_ENABLED=1" "QAT_FRACTION=0.20" "QAT_RAMP_STEPS=500" "QAT_TARGET=mlp" "QAT_LAYER_START=0" "QAT_LAYER_END=10"
+
+update_summary
+echo "[$(date -Iseconds)] valid tokenizer batch complete"
