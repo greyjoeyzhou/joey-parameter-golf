@@ -1,0 +1,11 @@
+{
+  "author": "na",
+  "github_id": "na",
+  "name": "2026-04-29_CaseOps_QKGain50_WD090_ProxyControl_Modal1x_smoke",
+  "blurb": "1xH100 Modal smoke test for the best non-TTT CaseOps proxy-control pipeline.",
+  "date": "2026-04-30T00:00:00Z",
+  "val_loss": 3.37718042,
+  "val_bpb": 1.30465977,
+  "bytes_total": 16070044,
+  "bytes_code": 80055
+}

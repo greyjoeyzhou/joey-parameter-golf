@@ -1,0 +1,11 @@
+{
+  "author": "na",
+  "github_id": "na",
+  "name": "2026-04-29_CaseOps_QKGain50_WD090_ProxyControl_Modal8x",
+  "blurb": "8xH100 Modal run for the best non-TTT CaseOps proxy-control setting under a 600s training cap.",
+  "date": "2026-04-30T00:00:00Z",
+  "val_loss": 2.86931345,
+  "val_bpb": 1.10846249,
+  "bytes_total": 16057194,
+  "bytes_code": 80055
+}

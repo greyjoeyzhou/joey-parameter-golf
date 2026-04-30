@@ -1,0 +1,25 @@
+export DATA_DIR=/vol/data
+export EMBED_WD=0.090
+export GPTQ_CALIBRATION_BATCHES=1
+export HESSIAN_CLIP_LAMBDA=0.15
+export ITERATIONS=20000
+export MAX_WALLCLOCK_SECONDS=600.0
+export MUON_WD=0.090
+export NCCL_DEBUG=WARN
+export NUM_LOOPS=0
+export PARALLEL_RESIDUAL_START=7
+export PYTHONUNBUFFERED=1
+export QK_GAIN_INIT=5.0
+export RUN_ID=2026-04-29_CaseOps_QKGain50_WD090_ProxyControl_Modal1x_smoke
+export SKIP_GATES_ENABLED=1
+export SLIDING_WINDOW_ENABLED=0
+export SOURCE_TRAIN_GPT=/workspace/train_gpt_decode.py
+export TORCH_NCCL_ASYNC_ERROR_HANDLING=1
+export TRAIN_LOG_EVERY=25
+export TTT_ENABLED=0
+export VAL_LOSS_EVERY=0
+export VAL_TOKEN_LIMIT=196608
+export VOCAB_SIZE=8192
+export WARMUP_STEPS=1
+cd /workspace
+torchrun --nproc_per_node=1 --nnodes=1 --standalone /workspace/train_gpt_decode_sidecar.py
