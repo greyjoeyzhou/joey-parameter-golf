@@ -1,0 +1,4 @@
+run_id	tokenizer	stack	mode
+2026-04-26_CaseOps_SkipGates_ParResid_QKGain45_HessClip015_Valid2h	CaseOps	SkipGates_ParResid_QKGain45_HessClip015_2h	non_qat
+2026-04-26_SP8192_SkipGates_ParResid_Valid2h	SP8192	SkipGates_ParResid_2h	non_qat
+2026-04-26_CaseOps_SkipGates_ParResid_QAT10_QKGain40_Valid2h	CaseOps	SkipGates_ParResid_QAT10_QKGain40_2h	qat

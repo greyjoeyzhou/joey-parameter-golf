@@ -1,0 +1,145 @@
+Hyperparameters:
+  adam_eps: 1e-08
+  adam_wd: 0.02
+  beta1: 0.9
+  beta2: 0.95
+  clip_mult_early: 1.0
+  clip_mult_late: 1.0
+  clip_mult_loop: 1.0
+  clip_mult_mid: 1.0
+  compressor: brotli
+  data_dir: ../local_tokenizer_data/caseops_v1
+  datasets_dir: ../local_tokenizer_data/caseops_v1/datasets/fineweb10B_sp8192
+  distributed: True
+  ema_decay: 0.997
+  embed_bits: 8
+  embed_clip_sigmas: 20.0
+  embed_lr: 0.6
+  embed_wd: 0.085
+  embedding_dim: 512
+  enable_looping_at: 0.5
+  eval_seq_len: 2048
+  eval_stride: 64
+  gptq_calibration_batches: 1
+  gptq_reserve_seconds: 12.0
+  grad_accum_steps: 8
+  grad_clip_norm: 0.3
+  head_lr: 0.008
+  hessian_clip_lambda: 0.15
+  is_main_process: True
+  iterations: 20000
+  ln_scale: True
+  local_rank: 0
+  logfile: logs/2026-04-25_CaseOps_SkipGates_ParResid_QKGain45_HessClip015_Valid.txt
+  logit_softcap: 30.0
+  loop_end: 5
+  loop_layer_bits: 0
+  loop_layer_clip_sigmas: 0.0
+  loop_phase2_at: 0.0
+  loop_start: 4
+  matrix_bits: 6
+  matrix_clip_sigmas: 12.85
+  matrix_lr: 0.02
+  max_wallclock_seconds: 1800.0
+  min_lr: 0.0
+  mlp_mult: 4.0
+  model_dim: 512
+  model_path: final_model.pt
+  muon_backend_steps: 5
+  muon_beta2: 0.95
+  muon_momentum: 0.99
+  muon_momentum_warmup_start: 0.92
+  muon_momentum_warmup_steps: 1500
+  muon_row_normalize: True
+  muon_wd: 0.085
+  num_heads: 8
+  num_kv_heads: 4
+  num_layers: 11
+  num_loops: 0
+  parallel_residual_start: 7
+  qk_gain_init: 4.5
+  quantized_model_path: final_model.int6.ptz
+  rank: 0
+  rope_base: 10000.0
+  rope_dims: 16
+  rope_train_seq_len: 2048
+  run_id: 2026-04-25_CaseOps_SkipGates_ParResid_QKGain45_HessClip015_Valid
+  scalar_lr: 0.02
+  seed: 1337
+  skip_gates_enabled: True
+  sliding_window_enabled: False
+  tie_embeddings: True
+  tied_embed_init_std: 0.005
+  tied_embed_lr: 0.03
+  tokenizer_path: ../local_tokenizer_data/caseops_v1/tokenizers/fineweb_8192_bpe.model
+  train_batch_tokens: 786432
+  train_files: ../local_tokenizer_data/caseops_v1/datasets/fineweb10B_sp8192/fineweb_train_*.bin
+  train_log_every: 50
+  train_seq_len: 2048
+  ttt_chunk_tokens: 32768
+  ttt_enabled: False
+  ttt_entropy_high: 2.1
+  ttt_entropy_low: 1.75
+  ttt_epochs: 4
+  ttt_freeze_blocks: 2
+  ttt_lr: 0.0005
+  ttt_ns_steps: 3
+  untie_loop_mlps: False
+  val_batch_tokens: 524288
+  val_files: ../local_tokenizer_data/caseops_v1/datasets/fineweb10B_sp8192/fineweb_val_*.bin
+  val_loss_every: 0
+  vocab_size: 8192
+  warmdown_frac: 0.667
+  warmup_steps: 1
+  world_size: 1
+  xsa_last_n: 11
+train_shards: 10
+val_tokens: 47851520
+model_params:35941464
+hessian_clip: lambda=0.15
+parallel_residuals: ON (layers 7-10)
+gptq:reserving 12s, effective=1788000ms
+warmup_step: 1/1
+1/20000 train_loss: 9.0140 train_time: 0.0m tok/s: 478404 looping:False
+2/20000 train_loss: 12.7533 train_time: 0.1m tok/s: 477384 looping:False
+3/20000 train_loss: 9.9935 train_time: 0.1m tok/s: 476159 looping:False
+4/20000 train_loss: 8.5058 train_time: 0.1m tok/s: 469669 looping:False
+5/20000 train_loss: 7.7867 train_time: 0.1m tok/s: 471265 looping:False
+50/20000 train_loss: 4.4316 train_time: 1.4m tok/s: 463847 looping:False
+100/20000 train_loss: 3.8638 train_time: 2.8m tok/s: 462945 looping:False
+150/20000 train_loss: 3.3489 train_time: 4.2m tok/s: 463535 looping:False
+200/20000 train_loss: 3.1407 train_time: 5.6m tok/s: 465301 looping:False
+250/20000 train_loss: 3.0536 train_time: 7.0m tok/s: 465238 looping:False
+300/20000 train_loss: 2.9626 train_time: 8.5m tok/s: 465292 looping:False
+350/20000 train_loss: 2.9271 train_time: 9.8m tok/s: 465785 looping:False
+400/20000 train_loss: 2.8738 train_time: 11.2m tok/s: 466350 looping:False
+450/20000 train_loss: 2.8452 train_time: 12.6m tok/s: 466361 looping:False
+500/20000 train_loss: 2.8139 train_time: 14.0m tok/s: 466483 looping:False
+550/20000 train_loss: 2.7791 train_time: 15.4m tok/s: 466776 looping:False
+600/20000 train_loss: 2.7371 train_time: 16.8m tok/s: 466864 looping:False
+650/20000 train_loss: 2.7243 train_time: 18.2m tok/s: 466967 looping:False
+700/20000 train_loss: 2.7080 train_time: 19.6m tok/s: 466971 looping:False
+750/20000 train_loss: 2.7200 train_time: 21.0m tok/s: 467137 looping:False
+800/20000 train_loss: 2.6576 train_time: 22.4m tok/s: 467188 looping:False
+850/20000 train_loss: 2.6183 train_time: 23.8m tok/s: 467256 looping:False
+900/20000 train_loss: 2.6540 train_time: 25.2m tok/s: 467462 looping:False
+950/20000 train_loss: 2.6157 train_time: 26.6m tok/s: 467425 looping:False
+1000/20000 train_loss: 2.5948 train_time: 28.0m tok/s: 467672 looping:False
+1050/20000 train_loss: 2.5844 train_time: 29.4m tok/s: 467565 looping:False
+1063/20000 val_loss: 2.5685 val_bpb: 1.1737
+stopping_early: wallclock_cap train_time: 1788036ms step: 1063/20000
+peak memory allocated: 27053 MiB reserved: 27160 MiB
+ema:applying EMA weights
+pre-quantization post-ema val_loss:2.65793449 val_bpb:1.21457238 eval_time:34680ms
+Serialized model: 135418745 bytes
+Code size: 80055 bytes
+GPTQ:collecting Hessians from calibration data...
+GPTQ:collected 67 Hessians in 0.5s
+GPTQ:saved Hessian diagnostics to hessian_diagnostics.pt (67 matrices)
+Quantized weights:
+  gptq (int6): blocks.attn.c_k.weight, blocks.attn.c_q.weight, blocks.attn.c_v.weight, blocks.attn.proj.weight, blocks.mlp.fc.weight, blocks.mlp.proj.weight
+  gptq (int8): tok_emb.weight
+  passthrough (float16): blocks.attn.q_gain, blocks.attn_scale, blocks.mlp_scale, blocks.resid_mix, skip_gates, skip_weights
+Serialized model quantized+brotli: 15989292 bytes
+Total submission size quantized+brotli: 16069347 bytes
+quantized val_loss:2.66871118 val_bpb:1.21949691 eval_time:35966ms

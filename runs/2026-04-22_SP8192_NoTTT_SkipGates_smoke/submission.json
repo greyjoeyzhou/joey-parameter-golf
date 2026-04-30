@@ -1,0 +1,11 @@
+{
+  "author": "na",
+  "github_id": "na",
+  "name": "2026-04-22_SP8192_NoTTT_SkipGates_smoke",
+  "blurb": "Local 1x5090 experiment run",
+  "date": "2026-04-23T16:18:47Z",
+  "val_loss": 0.0,
+  "val_bpb": 3.28561067,
+  "bytes_total": 0,
+  "bytes_code": 0
+}

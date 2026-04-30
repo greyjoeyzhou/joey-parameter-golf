@@ -1,0 +1,212 @@
+Hyperparameters:
+  adam_eps: 1e-08
+  adam_wd: 0.02
+  beta1: 0.9
+  beta2: 0.95
+  clip_mult_early: 1.0
+  clip_mult_late: 1.0
+  clip_mult_loop: 1.0
+  clip_mult_mid: 1.0
+  compressor: brotli
+  data_dir: ../local_tokenizer_data/caseops_v1
+  datasets_dir: ../local_tokenizer_data/caseops_v1/datasets/fineweb10B_sp8192
+  distributed: True
+  ema_decay: 0.997
+  embed_bits: 8
+  embed_clip_sigmas: 20.0
+  embed_lr: 0.6
+  embed_wd: 0.085
+  embedding_dim: 512
+  enable_looping_at: 0.5
+  eval_seq_len: 2048
+  eval_stride: 64
+  gptq_calibration_batches: 1
+  gptq_reserve_seconds: 12.0
+  grad_accum_steps: 8
+  grad_clip_norm: 0.3
+  head_lr: 0.008
+  hessian_clip_lambda: 0.15
+  is_main_process: True
+  iterations: 20000
+  ln_scale: True
+  local_rank: 0
+  logfile: logs/2026-04-26_CaseOps_SkipGates_ParResid_QAT10_QKGain40_Valid2h.txt
+  logit_softcap: 30.0
+  loop_end: 5
+  loop_layer_bits: 0
+  loop_layer_clip_sigmas: 0.0
+  loop_phase2_at: 0.0
+  loop_start: 4
+  matrix_bits: 6
+  matrix_clip_sigmas: 12.85
+  matrix_lr: 0.02
+  max_wallclock_seconds: 7200.0
+  min_lr: 0.0
+  mlp_mult: 4.0
+  model_dim: 512
+  model_path: final_model.pt
+  muon_backend_steps: 5
+  muon_beta2: 0.95
+  muon_momentum: 0.99
+  muon_momentum_warmup_start: 0.92
+  muon_momentum_warmup_steps: 1500
+  muon_row_normalize: True
+  muon_wd: 0.085
+  num_heads: 8
+  num_kv_heads: 4
+  num_layers: 11
+  num_loops: 0
+  parallel_residual_start: 7
+  qk_gain_init: 4.0
+  quantized_model_path: final_model.int6.ptz
+  rank: 0
+  rope_base: 10000.0
+  rope_dims: 16
+  rope_train_seq_len: 2048
+  run_id: 2026-04-26_CaseOps_SkipGates_ParResid_QAT10_QKGain40_Valid2h
+  scalar_lr: 0.02
+  seed: 1337
+  skip_gates_enabled: True
+  sliding_window_enabled: False
+  tie_embeddings: True
+  tied_embed_init_std: 0.005
+  tied_embed_lr: 0.03
+  tokenizer_path: ../local_tokenizer_data/caseops_v1/tokenizers/fineweb_8192_bpe.model
+  train_batch_tokens: 786432
+  train_files: ../local_tokenizer_data/caseops_v1/datasets/fineweb10B_sp8192/fineweb_train_*.bin
+  train_log_every: 50
+  train_seq_len: 2048
+  ttt_chunk_tokens: 32768
+  ttt_enabled: False
+  ttt_entropy_high: 2.1
+  ttt_entropy_low: 1.75
+  ttt_epochs: 4
+  ttt_freeze_blocks: 2
+  ttt_lr: 0.0005
+  ttt_ns_steps: 3
+  untie_loop_mlps: False
+  val_batch_tokens: 524288
+  val_files: ../local_tokenizer_data/caseops_v1/datasets/fineweb10B_sp8192/fineweb_val_*.bin
+  val_loss_every: 0
+  vocab_size: 8192
+  warmdown_frac: 0.667
+  warmup_steps: 1
+  world_size: 1
+  xsa_last_n: 11
+train_shards: 10
+val_tokens: 47851520
+model_params:35941464
+hessian_clip: lambda=0.15
+parallel_residuals: ON (layers 7-10)
+qat:enabled fraction=0.100 ramp_steps=500 alpha=(1.0->16.0) target=all layers=0-10
+qat:modules 66 -> blocks.0.attn.c_q, blocks.0.attn.c_k, blocks.0.attn.c_v, blocks.0.attn.proj, blocks.0.mlp.fc, blocks.0.mlp.proj, blocks.1.attn.c_q, blocks.1.attn.c_k, blocks.1.attn.c_v, blocks.1.attn.proj, blocks.1.mlp.fc, blocks.1.mlp.proj, blocks.2.attn.c_q, blocks.2.attn.c_k, blocks.2.attn.c_v, blocks.2.attn.proj, blocks.2.mlp.fc, blocks.2.mlp.proj, blocks.3.attn.c_q, blocks.3.attn.c_k, blocks.3.attn.c_v, blocks.3.attn.proj, blocks.3.mlp.fc, blocks.3.mlp.proj, blocks.4.attn.c_q, blocks.4.attn.c_k, blocks.4.attn.c_v, blocks.4.attn.proj, blocks.4.mlp.fc, blocks.4.mlp.proj, blocks.5.attn.c_q, blocks.5.attn.c_k, blocks.5.attn.c_v, blocks.5.attn.proj, blocks.5.mlp.fc, blocks.5.mlp.proj, blocks.6.attn.c_q, blocks.6.attn.c_k, blocks.6.attn.c_v, blocks.6.attn.proj, blocks.6.mlp.fc, blocks.6.mlp.proj, blocks.7.attn.c_q, blocks.7.attn.c_k, blocks.7.attn.c_v, blocks.7.attn.proj, blocks.7.mlp.fc, blocks.7.mlp.proj, blocks.8.attn.c_q, blocks.8.attn.c_k, blocks.8.attn.c_v, blocks.8.attn.proj, blocks.8.mlp.fc, blocks.8.mlp.proj, blocks.9.attn.c_q, blocks.9.attn.c_k, blocks.9.attn.c_v, blocks.9.attn.proj, blocks.9.mlp.fc, blocks.9.mlp.proj, blocks.10.attn.c_q, blocks.10.attn.c_k, blocks.10.attn.c_v, blocks.10.attn.proj, blocks.10.mlp.fc, blocks.10.mlp.proj
+gptq:reserving 12s, effective=7188000ms
+warmup_step: 1/1
+1/20000 train_loss: 9.0140 train_time: 0.0m tok/s: 481079 looping:False
+2/20000 train_loss: 12.7524 train_time: 0.1m tok/s: 479761 looping:False
+3/20000 train_loss: 9.9917 train_time: 0.1m tok/s: 479445 looping:False
+4/20000 train_loss: 8.5036 train_time: 0.1m tok/s: 478738 looping:False
+5/20000 train_loss: 7.7878 train_time: 0.1m tok/s: 478367 looping:False
+50/20000 train_loss: 4.4308 train_time: 1.4m tok/s: 473928 looping:False
+100/20000 train_loss: 3.8760 train_time: 2.8m tok/s: 470933 looping:False
+150/20000 train_loss: 3.3624 train_time: 4.2m tok/s: 469469 looping:False
+200/20000 train_loss: 3.1431 train_time: 5.6m tok/s: 467434 looping:False
+250/20000 train_loss: 3.0459 train_time: 7.0m tok/s: 465661 looping:False
+300/20000 train_loss: 2.9666 train_time: 8.5m tok/s: 463780 looping:False
+350/20000 train_loss: 2.9220 train_time: 9.9m tok/s: 462239 looping:False
+400/20000 train_loss: 2.8803 train_time: 11.4m tok/s: 461565 looping:False
+450/20000 train_loss: 2.8640 train_time: 12.8m tok/s: 461032 looping:False
+500/20000 train_loss: 2.8434 train_time: 14.2m tok/s: 460250 looping:False
+550/20000 train_loss: 2.8133 train_time: 15.6m tok/s: 460866 looping:False
+600/20000 train_loss: 2.7839 train_time: 17.0m tok/s: 461641 looping:False
+650/20000 train_loss: 2.7797 train_time: 18.4m tok/s: 461908 looping:False
+700/20000 train_loss: 2.7774 train_time: 19.8m tok/s: 462292 looping:False
+750/20000 train_loss: 2.7973 train_time: 21.2m tok/s: 462877 looping:False
+800/20000 train_loss: 2.7448 train_time: 22.6m tok/s: 463255 looping:False
+850/20000 train_loss: 2.7143 train_time: 24.0m tok/s: 463692 looping:False
+900/20000 train_loss: 2.7628 train_time: 25.4m tok/s: 464042 looping:False
+950/20000 train_loss: 2.7333 train_time: 26.8m tok/s: 464182 looping:False
+1000/20000 train_loss: 2.7232 train_time: 28.2m tok/s: 464517 looping:False
+1050/20000 train_loss: 2.7183 train_time: 29.6m tok/s: 464740 looping:False
+1100/20000 train_loss: 2.7164 train_time: 31.0m tok/s: 464942 looping:False
+1150/20000 train_loss: 2.7093 train_time: 32.4m tok/s: 465005 looping:False
+1200/20000 train_loss: 2.7041 train_time: 33.8m tok/s: 465336 looping:False
+1250/20000 train_loss: 2.6552 train_time: 35.2m tok/s: 465300 looping:False
+1300/20000 train_loss: 2.7019 train_time: 36.6m tok/s: 465453 looping:False
+1350/20000 train_loss: 2.6817 train_time: 38.0m tok/s: 465542 looping:False
+1400/20000 train_loss: 2.6837 train_time: 39.4m tok/s: 465708 looping:False
+1450/20000 train_loss: 2.6614 train_time: 40.8m tok/s: 465859 looping:False
+1500/20000 train_loss: 2.6871 train_time: 42.2m tok/s: 465659 looping:False
+1550/20000 train_loss: 2.6535 train_time: 43.6m tok/s: 465767 looping:False
+1600/20000 train_loss: 2.6773 train_time: 45.0m tok/s: 465809 looping:False
+1650/20000 train_loss: 2.6688 train_time: 46.4m tok/s: 465855 looping:False
+1700/20000 train_loss: 2.5970 train_time: 47.8m tok/s: 465906 looping:False
+1750/20000 train_loss: 2.6329 train_time: 49.2m tok/s: 465961 looping:False
+1800/20000 train_loss: 2.6322 train_time: 50.6m tok/s: 466115 looping:False
+1850/20000 train_loss: 2.6409 train_time: 52.0m tok/s: 466134 looping:False
+1900/20000 train_loss: 2.6087 train_time: 53.4m tok/s: 466225 looping:False
+1950/20000 train_loss: 2.5976 train_time: 54.8m tok/s: 466221 looping:False
+2000/20000 train_loss: 2.5915 train_time: 56.2m tok/s: 466123 looping:False
+2050/20000 train_loss: 2.5961 train_time: 57.7m tok/s: 466054 looping:False
+2100/20000 train_loss: 2.6122 train_time: 59.1m tok/s: 466000 looping:False
+2150/20000 train_loss: 2.6134 train_time: 60.5m tok/s: 465913 looping:False
+2200/20000 train_loss: 2.5792 train_time: 61.9m tok/s: 465874 looping:False
+2250/20000 train_loss: 2.6025 train_time: 63.3m tok/s: 465710 looping:False
+2300/20000 train_loss: 2.5628 train_time: 64.7m tok/s: 465719 looping:False
+2350/20000 train_loss: 2.5589 train_time: 66.1m tok/s: 465746 looping:False
+2400/20000 train_loss: 2.5658 train_time: 67.5m tok/s: 465712 looping:False
+2450/20000 train_loss: 2.5677 train_time: 69.0m tok/s: 465659 looping:False
+2500/20000 train_loss: 2.5589 train_time: 70.4m tok/s: 465620 looping:False
+2550/20000 train_loss: 2.5199 train_time: 71.8m tok/s: 465590 looping:False
+2600/20000 train_loss: 2.5263 train_time: 73.2m tok/s: 465510 looping:False
+2650/20000 train_loss: 2.5238 train_time: 74.6m tok/s: 465519 looping:False
+2700/20000 train_loss: 2.5381 train_time: 76.0m tok/s: 465564 looping:False
+2750/20000 train_loss: 2.5220 train_time: 77.4m tok/s: 465539 looping:False
+2800/20000 train_loss: 2.5231 train_time: 78.8m tok/s: 465578 looping:False
+2850/20000 train_loss: 2.5307 train_time: 80.2m tok/s: 465510 looping:False
+2900/20000 train_loss: 2.5247 train_time: 81.7m tok/s: 465466 looping:False
+2950/20000 train_loss: 2.5013 train_time: 83.1m tok/s: 465570 looping:False
+3000/20000 train_loss: 2.5116 train_time: 84.4m tok/s: 465621 looping:False
+3050/20000 train_loss: 2.4821 train_time: 85.8m tok/s: 465696 looping:False
+3100/20000 train_loss: 2.5148 train_time: 87.2m tok/s: 465717 looping:False
+3150/20000 train_loss: 2.5140 train_time: 88.6m tok/s: 465774 looping:False
+3200/20000 train_loss: 2.5063 train_time: 90.0m tok/s: 465811 looping:False
+3250/20000 train_loss: 2.5160 train_time: 91.4m tok/s: 465848 looping:False
+3300/20000 train_loss: 2.4728 train_time: 92.8m tok/s: 465877 looping:False
+3350/20000 train_loss: 2.4789 train_time: 94.2m tok/s: 465946 looping:False
+3400/20000 train_loss: 2.4805 train_time: 95.6m tok/s: 465970 looping:False
+3450/20000 train_loss: 2.4902 train_time: 97.0m tok/s: 465977 looping:False
+3500/20000 train_loss: 2.5038 train_time: 98.4m tok/s: 466021 looping:False
+3550/20000 train_loss: 2.4703 train_time: 99.8m tok/s: 466061 looping:False
+3600/20000 train_loss: 2.4783 train_time: 101.2m tok/s: 466082 looping:False
+3650/20000 train_loss: 2.4071 train_time: 102.6m tok/s: 466076 looping:False
+3700/20000 train_loss: 2.4258 train_time: 104.1m tok/s: 466089 looping:False
+3750/20000 train_loss: 2.4591 train_time: 105.5m tok/s: 466092 looping:False
+3800/20000 train_loss: 2.4967 train_time: 106.9m tok/s: 466120 looping:False
+late_qat:enabled step:3836 frac:0.900
+3850/20000 train_loss: 2.4147 train_time: 108.3m tok/s: 466067 looping:False
+3900/20000 train_loss: 2.4507 train_time: 109.7m tok/s: 466105 looping:False
+3950/20000 train_loss: 2.4100 train_time: 111.1m tok/s: 466157 looping:False
+4000/20000 train_loss: 2.4190 train_time: 112.5m tok/s: 466209 looping:False
+4050/20000 train_loss: 2.4226 train_time: 113.9m tok/s: 466211 looping:False
+4100/20000 train_loss: 2.4050 train_time: 115.3m tok/s: 466265 looping:False
+4150/20000 train_loss: 2.3761 train_time: 116.7m tok/s: 466257 looping:False
+4200/20000 train_loss: 2.3988 train_time: 118.1m tok/s: 466258 looping:False
+4250/20000 train_loss: 2.3888 train_time: 119.5m tok/s: 466308 looping:False
+4263/20000 val_loss: 2.4131 val_bpb: 1.1027
+stopping_early: wallclock_cap train_time: 7189515ms step: 4263/20000
+peak memory allocated: 27053 MiB reserved: 27160 MiB
+ema:applying EMA weights
+pre-quantization post-ema val_loss:2.41055873 val_bpb:1.10153131 eval_time:34631ms
+Serialized model: 135418745 bytes
+Code size: 80055 bytes
+GPTQ:collecting Hessians from calibration data...
+GPTQ:collected 67 Hessians in 0.5s
+GPTQ:saved Hessian diagnostics to hessian_diagnostics.pt (67 matrices)
+Quantized weights:
+  gptq (int6): blocks.attn.c_k.weight, blocks.attn.c_q.weight, blocks.attn.c_v.weight, blocks.attn.proj.weight, blocks.mlp.fc.weight, blocks.mlp.proj.weight
+  gptq (int8): tok_emb.weight
+  passthrough (float16): blocks.attn.q_gain, blocks.attn_scale, blocks.mlp_scale, blocks.resid_mix, skip_gates, skip_weights
+Serialized model quantized+brotli: 15980221 bytes
+Total submission size quantized+brotli: 16060276 bytes
+quantized val_loss:2.43532071 val_bpb:1.11284657 eval_time:36153ms

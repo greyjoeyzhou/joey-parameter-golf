@@ -1,0 +1,11 @@
+{
+  "author": "na",
+  "github_id": "na",
+  "name": "2026-04-25_CaseOps_SkipGates_ParResid_QAT20_QKGain40_MLPOnly_Valid_smoke",
+  "blurb": "Local 1x5090 experiment run",
+  "date": "2026-04-26T06:16:54Z",
+  "val_loss": 0.0,
+  "val_bpb": 2.41099458,
+  "bytes_total": 0,
+  "bytes_code": 0
+}

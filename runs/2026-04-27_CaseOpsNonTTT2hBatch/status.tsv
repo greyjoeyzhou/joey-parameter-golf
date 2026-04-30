@@ -1,0 +1,6 @@
+run_id	status	started_at	finished_at
+2026-04-27_CaseOps_SkipGates_ParResid_QKGain45_HessClip015_WD090_Valid2h	ok	2026-04-27T09:23:50-07:00	2026-04-27T11:26:27-07:00
+2026-04-27_CaseOps_SkipGates_ParResid_QKGain45_HessClip015_WD095_Valid2h	ok	2026-04-27T11:26:27-07:00	2026-04-27T13:29:02-07:00
+2026-04-27_CaseOps_SkipGates_ParResid_QKGain50_HessClip015_Valid2h	ok	2026-04-27T13:29:02-07:00	2026-04-27T15:31:36-07:00
+2026-04-27_CaseOps_SkipGates_ParResid_QKGain525_HessClip015_Valid2h	ok	2026-04-27T15:31:36-07:00	2026-04-27T17:34:10-07:00
+2026-04-27_CaseOps_SkipGates_ParResid_QKGain50_HessClip015_WD090_Valid2h	ok	2026-04-27T17:34:10-07:00	2026-04-27T19:36:42-07:00

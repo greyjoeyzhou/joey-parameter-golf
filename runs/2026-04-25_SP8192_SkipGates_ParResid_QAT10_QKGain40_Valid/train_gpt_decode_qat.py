@@ -1,0 +1,290 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+import glob
+import importlib.util
+import os
+import time
+from pathlib import Path
+
+import torch
+import torch.distributed as dist
+import torch.nn.functional as F
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_SOURCE = REPO_ROOT / "parameter-golf" / "records" / "track_10min_16mb" / "2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence" / "train_gpt_decode.py"
+
+
+def load_source_module():
+    source_path = Path(os.environ.get("SOURCE_TRAIN_GPT", str(DEFAULT_SOURCE))).resolve()
+    spec = importlib.util.spec_from_file_location("pg_qat_source", source_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Failed to load source script: {source_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module, source_path
+
+
+module, SOURCE_PATH = load_source_module()
+
+
+_OriginalValidationData = module.ValidationData
+_OriginalEvalVal = module.eval_val
+_OriginalCastedLinearForward = module.CastedLinear.forward
+_OriginalOptimizersInit = module.Optimizers.__init__
+_OriginalOptimizersStep = module.Optimizers.step
+
+
+class ValidationDataWithSidecar(_OriginalValidationData):
+    def __init__(self, h, device):
+        self.sp = module.spm.SentencePieceProcessor(model_file=h.tokenizer_path)
+        if int(self.sp.vocab_size()) != h.vocab_size:
+            raise ValueError(
+                f"VOCAB_SIZE={h.vocab_size} does not match tokenizer vocab_size={int(self.sp.vocab_size())}"
+            )
+        self.base_bytes_lut, self.has_leading_space_lut, self.is_boundary_token_lut = module.build_sentencepiece_luts(
+            self.sp, h.vocab_size, device
+        )
+
+        token_files = [
+            p for p in sorted(Path(h.datasets_dir).glob("fineweb_val_*.bin")) if "_bytes_" not in p.name
+        ]
+        if not token_files:
+            raise FileNotFoundError(f"No validation token files found under {h.datasets_dir}")
+        tokens = torch.cat([module.load_data_shard(file) for file in token_files]).contiguous()
+        usable = ((tokens.numel() - 1) // h.eval_seq_len) * h.eval_seq_len
+        if usable <= 0:
+            raise ValueError(f"Validation split is too short for TRAIN_SEQ_LEN={h.eval_seq_len}")
+        self.val_tokens = tokens[: usable + 1]
+
+        files = [Path(p) for p in sorted(glob.glob(str(Path(h.datasets_dir) / "fineweb_val_bytes_*.bin")))]
+        if files:
+            byte_counts = torch.cat([module.load_data_shard(file) for file in files]).contiguous().to(torch.int64)
+            if byte_counts.numel() < self.val_tokens.numel() - 1:
+                raise ValueError(
+                    f"Validation byte sidecar length mismatch: tokens={self.val_tokens.numel()} bytes={byte_counts.numel()}"
+                )
+            self.val_byte_counts = byte_counts[: self.val_tokens.numel() - 1]
+        else:
+            self.val_byte_counts = None
+
+
+def eval_val_with_sidecar(h, device, val_data, model):
+    if getattr(val_data, "val_byte_counts", None) is None:
+        return _OriginalEvalVal(h, device, val_data, model)
+
+    seq_len = h.eval_seq_len
+    local_batch_tokens = h.val_batch_tokens // (h.world_size * h.grad_accum_steps)
+    if local_batch_tokens < seq_len:
+        raise ValueError(
+            "VAL_BATCH_SIZE must provide at least one sequence per rank; "
+            f"got VAL_BATCH_SIZE={h.val_batch_tokens}, WORLD_SIZE={h.world_size}, "
+            f"GRAD_ACCUM_STEPS={h.grad_accum_steps}, seq_len={seq_len}"
+        )
+    local_batch_seqs = local_batch_tokens // seq_len
+    total_seqs = (val_data.val_tokens.numel() - 1) // seq_len
+    seq_start = (total_seqs * h.rank) // h.world_size
+    seq_end = (total_seqs * (h.rank + 1)) // h.world_size
+    val_loss_sum = torch.zeros((), device=device, dtype=torch.float64)
+    val_token_count = torch.zeros((), device=device, dtype=torch.float64)
+    val_byte_count = torch.zeros((), device=device, dtype=torch.float64)
+
+    model.eval()
+    with torch.inference_mode():
+        for batch_seq_start in range(seq_start, seq_end, local_batch_seqs):
+            batch_seq_end = min(batch_seq_start + local_batch_seqs, seq_end)
+            raw_start = batch_seq_start * seq_len
+            raw_end = batch_seq_end * seq_len + 1
+            local = val_data.val_tokens[raw_start:raw_end].to(device=device, dtype=torch.int64, non_blocking=True)
+            x = local[:-1].reshape(-1, seq_len)
+            y = local[1:].reshape(-1, seq_len)
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16, enabled=True):
+                batch_loss = model(x, y).detach()
+            batch_token_count = float(y.numel())
+            val_loss_sum += batch_loss.to(torch.float64) * batch_token_count
+            val_token_count += batch_token_count
+            byte_slice = val_data.val_byte_counts[raw_start + 1:raw_end].to(device=device, dtype=torch.float64, non_blocking=True)
+            val_byte_count += byte_slice.sum()
+
+    if dist.is_available() and dist.is_initialized():
+        dist.all_reduce(val_loss_sum, op=dist.ReduceOp.SUM)
+        dist.all_reduce(val_token_count, op=dist.ReduceOp.SUM)
+        dist.all_reduce(val_byte_count, op=dist.ReduceOp.SUM)
+
+    model.train()
+    return module._loss_bpb(val_loss_sum, val_token_count, val_byte_count)
+
+
+class _QATState:
+    enabled = bool(int(os.environ.get("QAT_ENABLED", "0")))
+    fraction = float(os.environ.get("QAT_FRACTION", "0.0"))
+    ramp_steps = int(os.environ.get("QAT_RAMP_STEPS", "500"))
+    alpha_init = float(os.environ.get("QAT_ALPHA_INIT", "1.0"))
+    alpha_final = float(os.environ.get("QAT_ALPHA_FINAL", "16.0"))
+    target = os.environ.get("QAT_TARGET", "all").strip().lower()
+    layer_start = int(os.environ.get("QAT_LAYER_START", "0"))
+    layer_end = int(os.environ.get("QAT_LAYER_END", str(1 << 30)))
+    clip_range = 31.0
+    active = False
+    alpha = alpha_init
+    started = False
+    start_step = None
+    step_count = 0
+    train_step_count = 0
+    train_start_perf = None
+    warmup_steps = 0
+    effective_wallclock_ms = None
+    iterations = 0
+
+
+def _qat_target_for_module(name: str) -> str:
+    if ".attn." in name:
+        return "attn"
+    if ".mlp." in name or name.startswith("override_mlps."):
+        return "mlp"
+    return "other"
+
+
+def _qat_layer_for_module(name: str) -> int | None:
+    parts = name.split(".")
+    if len(parts) >= 2 and parts[0] == "blocks" and parts[1].isdigit():
+        return int(parts[1])
+    if len(parts) >= 2 and parts[0] == "override_mlps":
+        layer_id = parts[1].split("_", 1)[0]
+        if layer_id.isdigit():
+            return int(layer_id)
+    return None
+
+
+def _annotate_qat_modules(base_model) -> list[str]:
+    valid_targets = {"all", "attn", "mlp"}
+    if _QATState.target not in valid_targets:
+        raise ValueError(f"Unsupported QAT_TARGET={_QATState.target!r}; expected one of {sorted(valid_targets)}")
+    if _QATState.layer_end < _QATState.layer_start:
+        raise ValueError(
+            f"QAT_LAYER_END={_QATState.layer_end} must be >= QAT_LAYER_START={_QATState.layer_start}"
+        )
+
+    selected = []
+    for name, submodule in base_model.named_modules():
+        if not isinstance(submodule, module.CastedLinear):
+            continue
+        submodule._qat_name = name
+        submodule._qat_target = _qat_target_for_module(name)
+        submodule._qat_layer_idx = _qat_layer_for_module(name)
+        if _qat_applies_to_module(submodule):
+            selected.append(name)
+    return selected
+
+
+def _qat_applies_to_module(submodule) -> bool:
+    module_target = getattr(submodule, "_qat_target", "other")
+    if _QATState.target != "all" and module_target != _QATState.target:
+        return False
+
+    layer_idx = getattr(submodule, "_qat_layer_idx", None)
+    if layer_idx is None:
+        return _QATState.target == "all" and _QATState.layer_start <= 0 and _QATState.layer_end >= (1 << 30)
+
+    return _QATState.layer_start <= layer_idx <= _QATState.layer_end
+
+
+def _maybe_activate_qat() -> None:
+    if not _QATState.enabled or _QATState.active or _QATState.train_start_perf is None:
+        return
+
+    if _QATState.effective_wallclock_ms is not None and _QATState.effective_wallclock_ms > 0:
+        elapsed_ms = 1000.0 * (time.perf_counter() - _QATState.train_start_perf)
+        frac = elapsed_ms / max(_QATState.effective_wallclock_ms, 1e-9)
+    elif _QATState.iterations > 0:
+        frac = _QATState.train_step_count / max(_QATState.iterations, 1)
+    else:
+        frac = 0.0
+
+    if frac >= max(0.0, 1.0 - _QATState.fraction):
+        _QATState.active = True
+        _QATState.start_step = _QATState.train_step_count
+        _QATState.alpha = _QATState.alpha_init
+        module.log(f"late_qat:enabled step:{_QATState.train_step_count} frac:{frac:.3f}")
+
+
+def _update_qat_alpha() -> None:
+    if not _QATState.active:
+        return
+    progress = min(max(_QATState.train_step_count - (_QATState.start_step or 0), 0) / max(_QATState.ramp_steps, 1), 1.0)
+    _QATState.alpha = _QATState.alpha_init + (_QATState.alpha_final - _QATState.alpha_init) * progress
+
+
+def casted_linear_forward_qat(self, x):
+    if self.training and _QATState.active and self.weight.ndim == 2 and _qat_applies_to_module(self):
+        w32 = self.weight.float()
+        row_max = w32.abs().amax(dim=1)
+        s = (row_max / _QATState.clip_range).clamp_min(1.0 / _QATState.clip_range)
+        scaled = w32 / s[:, None]
+        frac = scaled - scaled.floor()
+        soft_rounded = scaled.floor() + torch.sigmoid(_QATState.alpha * (frac - 0.5))
+        w_q = torch.clamp(soft_rounded, -_QATState.clip_range, _QATState.clip_range) * s[:, None]
+        w = w_q.to(x.dtype)
+    else:
+        w = self.weight.to(x.dtype)
+    bias = self.bias.to(x.dtype) if self.bias is not None else None
+    return F.linear(x, w, bias)
+
+
+def optimizers_init_qat(self, h, base_model):
+    _OriginalOptimizersInit(self, h, base_model)
+    selected_modules = _annotate_qat_modules(base_model)
+    _QATState.warmup_steps = int(getattr(h, "warmup_steps", 0))
+    _QATState.iterations = int(getattr(h, "iterations", 0))
+    max_wallclock_ms = 1000.0 * h.max_wallclock_seconds if getattr(h, "max_wallclock_seconds", 0) > 0 else None
+    if max_wallclock_ms is not None:
+        max_wallclock_ms -= getattr(h, "gptq_reserve_seconds", 60.0) * 1000.0
+    _QATState.effective_wallclock_ms = max_wallclock_ms
+    _QATState.active = False
+    _QATState.started = False
+    _QATState.start_step = None
+    _QATState.step_count = 0
+    _QATState.train_step_count = 0
+    _QATState.train_start_perf = None
+    _QATState.alpha = _QATState.alpha_init
+    if _QATState.enabled:
+        if _QATState.layer_end >= (1 << 30):
+            layer_span = f"{_QATState.layer_start}+"
+        else:
+            layer_span = f"{_QATState.layer_start}-{_QATState.layer_end}"
+        module.log(
+            f"qat:enabled fraction={_QATState.fraction:.3f} ramp_steps={_QATState.ramp_steps} "
+            f"alpha=({_QATState.alpha_init}->{_QATState.alpha_final}) target={_QATState.target} layers={layer_span}"
+        )
+        module.log(f"qat:modules {len(selected_modules)} -> {', '.join(selected_modules)}")
+
+
+def optimizers_step_qat(self):
+    _OriginalOptimizersStep(self)
+    _QATState.step_count += 1
+    if not _QATState.enabled:
+        return
+    if _QATState.step_count <= _QATState.warmup_steps:
+        return
+    if _QATState.train_start_perf is None:
+        _QATState.train_start_perf = time.perf_counter()
+    _QATState.train_step_count += 1
+    _maybe_activate_qat()
+    _update_qat_alpha()
+
+
+module.ValidationData = ValidationDataWithSidecar
+module.eval_val = eval_val_with_sidecar
+module.CastedLinear.forward = casted_linear_forward_qat
+module.Optimizers.__init__ = optimizers_init_qat
+module.Optimizers.step = optimizers_step_qat
+
+
+def main():
+    module.main()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,11 @@
+{
+  "author": "na",
+  "github_id": "na",
+  "name": "2026-04-27_CaseOps_SkipGates_ParResid_QKGain50_HessClip015_WD090_Valid3h",
+  "blurb": "Local 1x5090 experiment run",
+  "date": "2026-04-28T09:50:15Z",
+  "val_loss": 0.0,
+  "val_bpb": 1.10178186,
+  "bytes_total": 0,
+  "bytes_code": 0
+}

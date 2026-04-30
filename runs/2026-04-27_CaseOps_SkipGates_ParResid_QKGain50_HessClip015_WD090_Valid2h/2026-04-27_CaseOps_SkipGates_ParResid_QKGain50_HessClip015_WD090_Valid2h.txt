@@ -1,0 +1,235 @@
+====================================================================================================
+Hyperparameters:
+  adam_eps: 1e-08
+  adam_wd: 0.02
+  beta1: 0.9
+  beta2: 0.95
+  clip_mult_early: 1.0
+  clip_mult_late: 1.0
+  clip_mult_loop: 1.0
+  clip_mult_mid: 1.0
+  compressor: brotli
+  data_dir: ../local_tokenizer_data/caseops_v1
+  datasets_dir: ../local_tokenizer_data/caseops_v1/datasets/fineweb10B_sp8192
+  distributed: True
+  ema_decay: 0.997
+  embed_bits: 8
+  embed_clip_sigmas: 20.0
+  embed_lr: 0.6
+  embed_wd: 0.09
+  embedding_dim: 512
+  enable_looping_at: 0.5
+  eval_seq_len: 2048
+  eval_stride: 64
+  gptq_calibration_batches: 1
+  gptq_reserve_seconds: 12.0
+  grad_accum_steps: 8
+  grad_clip_norm: 0.3
+  head_lr: 0.008
+  hessian_clip_lambda: 0.15
+  is_main_process: True
+  iterations: 20000
+  ln_scale: True
+  local_rank: 0
+  logfile: logs/2026-04-27_CaseOps_SkipGates_ParResid_QKGain50_HessClip015_WD090_Valid2h.txt
+  logit_softcap: 30.0
+  loop_end: 5
+  loop_layer_bits: 0
+  loop_layer_clip_sigmas: 0.0
+  loop_phase2_at: 0.0
+  loop_start: 4
+  matrix_bits: 6
+  matrix_clip_sigmas: 12.85
+  matrix_lr: 0.02
+  max_wallclock_seconds: 7200.0
+  min_lr: 0.0
+  mlp_mult: 4.0
+  model_dim: 512
+  model_path: final_model.pt
+  muon_backend_steps: 5
+  muon_beta2: 0.95
+  muon_momentum: 0.99
+  muon_momentum_warmup_start: 0.92
+  muon_momentum_warmup_steps: 1500
+  muon_row_normalize: True
+  muon_wd: 0.09
+  num_heads: 8
+  num_kv_heads: 4
+  num_layers: 11
+  num_loops: 0
+  parallel_residual_start: 7
+  qk_gain_init: 5.0
+  quantized_model_path: final_model.int6.ptz
+  rank: 0
+  rope_base: 10000.0
+  rope_dims: 16
+  rope_train_seq_len: 2048
+  run_id: 2026-04-27_CaseOps_SkipGates_ParResid_QKGain50_HessClip015_WD090_Valid2h
+  scalar_lr: 0.02
+  seed: 1337
+  skip_gates_enabled: True
+  sliding_window_enabled: False
+  tie_embeddings: True
+  tied_embed_init_std: 0.005
+  tied_embed_lr: 0.03
+  tokenizer_path: ../local_tokenizer_data/caseops_v1/tokenizers/fineweb_8192_bpe.model
+  train_batch_tokens: 786432
+  train_files: ../local_tokenizer_data/caseops_v1/datasets/fineweb10B_sp8192/fineweb_train_*.bin
+  train_log_every: 50
+  train_seq_len: 2048
+  ttt_chunk_tokens: 32768
+  ttt_enabled: False
+  ttt_entropy_high: 2.1
+  ttt_entropy_low: 1.75
+  ttt_epochs: 4
+  ttt_freeze_blocks: 2
+  ttt_lr: 0.0005
+  ttt_ns_steps: 3
+  untie_loop_mlps: False
+  val_batch_tokens: 524288
+  val_files: ../local_tokenizer_data/caseops_v1/datasets/fineweb10B_sp8192/fineweb_val_*.bin
+  val_loss_every: 0
+  vocab_size: 8192
+  warmdown_frac: 0.667
+  warmup_steps: 1
+  world_size: 1
+  xsa_last_n: 11
+====================================================================================================
+Running Python 3.12.13 (main, Apr  7 2026, 20:45:25) [Clang 22.1.1 ]
+Running PyTorch 2.11.0+cu130
+Mon Apr 27 17:34:13 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.57                 Driver Version: 591.86         CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5090        On  |   00000000:01:00.0 Off |                  N/A |
+| 45%   49C    P1             37W /  600W |    1094MiB /  32607MiB |      1%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A          469388      C   /python3.12                           N/A      |
++-----------------------------------------------------------------------------------------+
+
+====================================================================================================
+train_shards: 10
+val_tokens: 47851520
+model_params:35941464
+hessian_clip: lambda=0.15
+parallel_residuals: ON (layers 7-10)
+gptq:reserving 12s, effective=7188000ms
+warmup_step: 1/1
+1/20000 train_loss: 9.0140 train_time: 0.0m tok/s: 476342 looping:False
+2/20000 train_loss: 12.7540 train_time: 0.1m tok/s: 477281 looping:False
+3/20000 train_loss: 9.9946 train_time: 0.1m tok/s: 476241 looping:False
+4/20000 train_loss: 8.5077 train_time: 0.1m tok/s: 476545 looping:False
+5/20000 train_loss: 7.7845 train_time: 0.1m tok/s: 476156 looping:False
+50/20000 train_loss: 4.4331 train_time: 1.4m tok/s: 468557 looping:False
+100/20000 train_loss: 3.8781 train_time: 2.8m tok/s: 466385 looping:False
+150/20000 train_loss: 3.3723 train_time: 4.2m tok/s: 466140 looping:False
+200/20000 train_loss: 3.1430 train_time: 5.6m tok/s: 466685 looping:False
+250/20000 train_loss: 3.0374 train_time: 7.0m tok/s: 466933 looping:False
+300/20000 train_loss: 2.9686 train_time: 8.4m tok/s: 467530 looping:False
+350/20000 train_loss: 2.9244 train_time: 9.8m tok/s: 467876 looping:False
+400/20000 train_loss: 2.8824 train_time: 11.2m tok/s: 468206 looping:False
+450/20000 train_loss: 2.8627 train_time: 12.6m tok/s: 468173 looping:False
+500/20000 train_loss: 2.8453 train_time: 14.0m tok/s: 468430 looping:False
+550/20000 train_loss: 2.8207 train_time: 15.4m tok/s: 468224 looping:False
+600/20000 train_loss: 2.7941 train_time: 16.8m tok/s: 467908 looping:False
+650/20000 train_loss: 2.7874 train_time: 18.2m tok/s: 467900 looping:False
+700/20000 train_loss: 2.7781 train_time: 19.6m tok/s: 468165 looping:False
+750/20000 train_loss: 2.7974 train_time: 21.0m tok/s: 468406 looping:False
+800/20000 train_loss: 2.7481 train_time: 22.4m tok/s: 468389 looping:False
+850/20000 train_loss: 2.7199 train_time: 23.8m tok/s: 468344 looping:False
+900/20000 train_loss: 2.7630 train_time: 25.2m tok/s: 468187 looping:False
+950/20000 train_loss: 2.7393 train_time: 26.6m tok/s: 468236 looping:False
+1000/20000 train_loss: 2.7240 train_time: 28.0m tok/s: 467947 looping:False
+1050/20000 train_loss: 2.7237 train_time: 29.4m tok/s: 467896 looping:False
+1100/20000 train_loss: 2.7194 train_time: 30.8m tok/s: 467769 looping:False
+1150/20000 train_loss: 2.7148 train_time: 32.2m tok/s: 467611 looping:False
+1200/20000 train_loss: 2.7078 train_time: 33.7m tok/s: 467381 looping:False
+1250/20000 train_loss: 2.6574 train_time: 35.1m tok/s: 467013 looping:False
+1300/20000 train_loss: 2.7048 train_time: 36.5m tok/s: 466976 looping:False
+1350/20000 train_loss: 2.6856 train_time: 37.9m tok/s: 466831 looping:False
+1400/20000 train_loss: 2.6878 train_time: 39.3m tok/s: 466801 looping:False
+1450/20000 train_loss: 2.6632 train_time: 40.7m tok/s: 466704 looping:False
+1500/20000 train_loss: 2.6917 train_time: 42.1m tok/s: 466647 looping:False
+1550/20000 train_loss: 2.6579 train_time: 43.5m tok/s: 466672 looping:False
+1600/20000 train_loss: 2.6796 train_time: 44.9m tok/s: 466599 looping:False
+1650/20000 train_loss: 2.6716 train_time: 46.4m tok/s: 466439 looping:False
+1700/20000 train_loss: 2.6017 train_time: 47.8m tok/s: 466393 looping:False
+1750/20000 train_loss: 2.6351 train_time: 49.2m tok/s: 466354 looping:False
+1800/20000 train_loss: 2.6340 train_time: 50.6m tok/s: 466290 looping:False
+1850/20000 train_loss: 2.6423 train_time: 52.0m tok/s: 466217 looping:False
+1900/20000 train_loss: 2.6110 train_time: 53.4m tok/s: 466228 looping:False
+1950/20000 train_loss: 2.5984 train_time: 54.8m tok/s: 466139 looping:False
+2000/20000 train_loss: 2.5940 train_time: 56.2m tok/s: 466146 looping:False
+2050/20000 train_loss: 2.5987 train_time: 57.6m tok/s: 466234 looping:False
+2100/20000 train_loss: 2.6138 train_time: 59.0m tok/s: 466262 looping:False
+2150/20000 train_loss: 2.6143 train_time: 60.4m tok/s: 466296 looping:False
+2200/20000 train_loss: 2.5832 train_time: 61.8m tok/s: 466349 looping:False
+2250/20000 train_loss: 2.6052 train_time: 63.2m tok/s: 466389 looping:False
+2300/20000 train_loss: 2.5652 train_time: 64.6m tok/s: 466368 looping:False
+2350/20000 train_loss: 2.5623 train_time: 66.0m tok/s: 466475 looping:False
+2400/20000 train_loss: 2.5683 train_time: 67.4m tok/s: 466451 looping:False
+2450/20000 train_loss: 2.5710 train_time: 68.8m tok/s: 466450 looping:False
+2500/20000 train_loss: 2.5617 train_time: 70.2m tok/s: 466517 looping:False
+2550/20000 train_loss: 2.5232 train_time: 71.6m tok/s: 466506 looping:False
+2600/20000 train_loss: 2.5269 train_time: 73.0m tok/s: 466555 looping:False
+2650/20000 train_loss: 2.5253 train_time: 74.4m tok/s: 466570 looping:False
+2700/20000 train_loss: 2.5403 train_time: 75.8m tok/s: 466639 looping:False
+2750/20000 train_loss: 2.5260 train_time: 77.2m tok/s: 466673 looping:False
+2800/20000 train_loss: 2.5286 train_time: 78.6m tok/s: 466673 looping:False
+2850/20000 train_loss: 2.5335 train_time: 80.1m tok/s: 466583 looping:False
+2900/20000 train_loss: 2.5281 train_time: 81.5m tok/s: 466516 looping:False
+2950/20000 train_loss: 2.5050 train_time: 82.9m tok/s: 466514 looping:False
+3000/20000 train_loss: 2.5154 train_time: 84.3m tok/s: 466430 looping:False
+3050/20000 train_loss: 2.4859 train_time: 85.7m tok/s: 466415 looping:False
+3100/20000 train_loss: 2.5174 train_time: 87.1m tok/s: 466404 looping:False
+3150/20000 train_loss: 2.5165 train_time: 88.5m tok/s: 466434 looping:False
+3200/20000 train_loss: 2.5079 train_time: 89.9m tok/s: 466419 looping:False
+3250/20000 train_loss: 2.5198 train_time: 91.3m tok/s: 466418 looping:False
+3300/20000 train_loss: 2.4750 train_time: 92.7m tok/s: 466443 looping:False
+3350/20000 train_loss: 2.4828 train_time: 94.1m tok/s: 466506 looping:False
+3400/20000 train_loss: 2.4843 train_time: 95.5m tok/s: 466592 looping:False
+3450/20000 train_loss: 2.4940 train_time: 96.9m tok/s: 466642 looping:False
+3500/20000 train_loss: 2.5061 train_time: 98.3m tok/s: 466684 looping:False
+3550/20000 train_loss: 2.4726 train_time: 99.7m tok/s: 466657 looping:False
+3600/20000 train_loss: 2.4811 train_time: 101.1m tok/s: 466617 looping:False
+3650/20000 train_loss: 2.4093 train_time: 102.5m tok/s: 466578 looping:False
+3700/20000 train_loss: 2.4287 train_time: 103.9m tok/s: 466573 looping:False
+3750/20000 train_loss: 2.4613 train_time: 105.4m tok/s: 466477 looping:False
+3800/20000 train_loss: 2.4985 train_time: 106.8m tok/s: 466443 looping:False
+3850/20000 train_loss: 2.4158 train_time: 108.2m tok/s: 466394 looping:False
+3900/20000 train_loss: 2.4517 train_time: 109.6m tok/s: 466319 looping:False
+3950/20000 train_loss: 2.4126 train_time: 111.0m tok/s: 466346 looping:False
+4000/20000 train_loss: 2.4214 train_time: 112.4m tok/s: 466331 looping:False
+4050/20000 train_loss: 2.4229 train_time: 113.8m tok/s: 466281 looping:False
+4100/20000 train_loss: 2.4069 train_time: 115.3m tok/s: 466219 looping:False
+4150/20000 train_loss: 2.3772 train_time: 116.7m tok/s: 466251 looping:False
+4200/20000 train_loss: 2.3999 train_time: 118.1m tok/s: 466296 looping:False
+4250/20000 train_loss: 2.3910 train_time: 119.5m tok/s: 466279 looping:False
+4262/20000 val_loss: 2.4133 val_bpb: 1.1028
+stopping_early: wallclock_cap train_time: 7188517ms step: 4262/20000
+peak memory allocated: 27053 MiB reserved: 27160 MiB
+ema:applying EMA weights
+pre-quantization post-ema val_loss:2.41080800 val_bpb:1.10164521 eval_time:34623ms
+Serialized model: 135418745 bytes
+Code size: 80055 bytes
+GPTQ:collecting Hessians from calibration data...
+GPTQ:collected 67 Hessians in 0.6s
+GPTQ:saved Hessian diagnostics to hessian_diagnostics.pt (67 matrices)
+Quantized weights:
+  gptq (int6): blocks.attn.c_k.weight, blocks.attn.c_q.weight, blocks.attn.c_v.weight, blocks.attn.proj.weight, blocks.mlp.fc.weight, blocks.mlp.proj.weight
+  gptq (int8): tok_emb.weight
+  passthrough (float16): blocks.attn.q_gain, blocks.attn_scale, blocks.mlp_scale, blocks.resid_mix, skip_gates, skip_weights
+Serialized model quantized+brotli: 15976553 bytes
+Total submission size quantized+brotli: 16056608 bytes
+quantized val_loss:2.43474772 val_bpb:1.11258473 eval_time:36210ms
