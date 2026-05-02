@@ -7,6 +7,7 @@
 - Use `tmp_modal/modal_runner.py` as the entrypoint, not `modal_runner.py` from repo root.
 - The current runner is wired to the best recent non-TTT setting: `2026-04-28_CaseOps_QKGain50_WD090_ProxyControl_Valid2p5h`.
 - It exposes a `1x` H100 smoke path and an `8x` H100 full-run path.
+- It also exposes `smoke_test_ttt` and `main_ttt` entrypoints for a conservative TTT variant layered on the same CaseOps base.
 - In this repo, local data lives under `parameter-golf/data`, and `upload_data` already defaults there.
 - Artifacts are now written per-run on the Modal volume and downloaded into local `runs/<RUN_ID>/`.
 - If you do not have a global `modal` binary installed, use `uvx --from modal modal ...`.
@@ -17,8 +18,8 @@
 
 - builds an image from `nvidia/cuda:12.8.1-devel-ubuntu22.04`
 - installs Python 3.11, `torch==2.9.1` for `cu128`, and `flash_attn_3`
-- mounts the exact archived trainer snapshots from the best non-TTT run:
-  - `runs/2026-04-28_CaseOps_QKGain50_WD090_ProxyControl_Valid2p5h/train_gpt_decode_sidecar.py`
+- mounts the live sidecar wrapper plus the exact archived source trainer from the best non-TTT run:
+  - `scripts/train_gpt_decode_sidecar.py`
   - `runs/2026-04-28_CaseOps_QKGain50_WD090_ProxyControl_Valid2p5h/train_gpt_decode.py`
 - creates two persistent Modal volumes:
   - `param-golf-data` for datasets and tokenizers
@@ -222,6 +223,8 @@ What happens:
 5. The runner commits logs and artifacts to the `param-golf-runs` volume.
 6. The local entrypoint downloads that single run directory into `./runs/<RUN_ID>/`.
 
+For the `8xH100` full-run path, the runner now sets `COMPETITION_MODE=1`, which skips the final quantized-model eval after serialization. The goal is to remove the multi-minute post-train tail on Modal while keeping training, EMA, and GPTQ artifact generation unchanged.
+
 The first run will be slower because Modal has to build the image and cold-start the container.
 
 If you later generalize the runner to accept `--gpus`, the same command shape can be used for `1` through `8` cards, subject to the batch-size caveat above.
@@ -244,6 +247,35 @@ The smoke entrypoint currently sets:
 - the archived best non-TTT proxy-control env overrides from `2026-04-28_CaseOps_QKGain50_WD090_ProxyControl_Valid2p5h`
 
 If you want a `2x`, `4x`, or other intermediate-card smoke path, add a corresponding Modal function or generalize `main()` plus the underlying Modal function so the GPU reservation and `nproc` are both derived from the same `gpus` argument.
+
+## TTT Variant
+
+The Modal runner also exposes a conservative TTT path built on the same non-TTT CaseOps proxy-control stack:
+
+```bash
+uvx --from modal modal run tmp_modal/modal_runner.py::smoke_test_ttt \
+  --wallclock 600 \
+  --run-id 2026-04-30_CaseOps_QKGain50_WD090_ProxyControl_TTT_Modal1x_smoke
+```
+
+and
+
+```bash
+uvx --from modal modal run tmp_modal/modal_runner.py::main_ttt \
+  --wallclock 600 \
+  --run-id 2026-04-30_CaseOps_QKGain50_WD090_ProxyControl_TTT_Modal8x
+```
+
+Current conservative defaults:
+
+- `TTT_ENABLED=1`
+- `TTT_LR=0.001`
+- `TTT_EPOCHS=1`
+- `TTT_FREEZE_BLOCKS=8`
+- `TTT_CHUNK_TOKENS=32768`
+- `TTT_NS_STEPS=0`
+
+These settings were chosen to avoid repeating the earlier more aggressive `TTT_LR=0.005` local experiments that over-adapted badly.
 
 ## Downloading Artifacts Manually
 

@@ -4,7 +4,9 @@ Modal runner for the best non-TTT CaseOps proxy-control setting.
 Usage:
     modal run tmp_modal/modal_runner.py::upload_data
     modal run tmp_modal/modal_runner.py::smoke_test
+    modal run tmp_modal/modal_runner.py::smoke_test_ttt
     modal run tmp_modal/modal_runner.py::main --run-id 2026-04-29_CaseOps_QKGain50_WD090_ProxyControl_Modal8x
+    modal run tmp_modal/modal_runner.py::main_ttt --run-id 2026-04-29_CaseOps_QKGain50_WD090_ProxyControl_TTT_Modal8x
     modal run tmp_modal/modal_runner.py::download_run --run-id <run-id>
 """
 
@@ -23,7 +25,7 @@ import modal
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BEST_RUN_ID = "2026-04-28_CaseOps_QKGain50_WD090_ProxyControl_Valid2p5h"
 BEST_RUN_DIR = REPO_ROOT / "runs" / BEST_RUN_ID
-SIDECAR_SCRIPT = BEST_RUN_DIR / "train_gpt_decode_sidecar.py"
+SIDECAR_SCRIPT = REPO_ROOT / "scripts" / "train_gpt_decode_sidecar.py"
 SOURCE_SCRIPT = BEST_RUN_DIR / "train_gpt_decode.py"
 
 APP_NAME = "param-golf-caseops-nonttt"
@@ -57,6 +59,20 @@ BEST_NONTTT_ENV = {
     "VAL_TOKEN_LIMIT": "196608",
     "VOCAB_SIZE": str(DEFAULT_VOCAB_SIZE),
     "WARMUP_STEPS": "1",
+}
+
+BEST_TTT_ENV = BEST_NONTTT_ENV | {
+    # Conservative TTT variant for the current best non-TTT CaseOps line:
+    # only adapt the last three blocks, use one fixed epoch, and lower the
+    # adaptation LR well below the prior 0.005 LegalTTT trial.
+    "TTT_ENABLED": "1",
+    "TTT_LR": "0.001",
+    "TTT_EPOCHS": "1",
+    "TTT_FREEZE_BLOCKS": "8",
+    "TTT_CHUNK_TOKENS": "32768",
+    "TTT_NS_STEPS": "0",
+    "TTT_ENTROPY_HIGH": "999",
+    "TTT_ENTROPY_LOW": "-999",
 }
 
 # ---------------------------------------------------------------
@@ -153,10 +169,11 @@ def _move_outputs(run_dir: Path) -> None:
             print(f"saved: {dst}")
 
 
-def _run_torchrun(nproc: int, env_overrides: dict[str, str]) -> None:
+def _run_torchrun(nproc: int, env_overrides: dict[str, str], *, base_env: dict[str, str] | None = None) -> None:
     """Launch torchrun with nproc processes inside the container."""
+    selected_env = BEST_NONTTT_ENV if base_env is None else base_env
     env = os.environ.copy()
-    env.update(BEST_NONTTT_ENV)
+    env.update(selected_env)
     env.update(env_overrides)
     run_id = env["RUN_ID"]
 
@@ -170,7 +187,7 @@ def _run_torchrun(nproc: int, env_overrides: dict[str, str]) -> None:
         "--standalone",
         "/workspace/train_gpt_decode_sidecar.py",
     ]
-    command_env = BASE_ENV | BEST_NONTTT_ENV | env_overrides
+    command_env = BASE_ENV | selected_env | env_overrides
     _write_command_file(run_dir, cmd, {key: env[key] for key in sorted(command_env)})
     print(f"launching: {' '.join(cmd)}")
     print(f"env overrides: {env_overrides}")
@@ -195,13 +212,37 @@ def train(
     extra_env: dict[str, str] | None = None,
 ):
     overrides = {
+        "COMPETITION_MODE": "1",
         "ITERATIONS": str(iterations),
         "MAX_WALLCLOCK_SECONDS": str(max_wallclock_seconds),
     }
     overrides["RUN_ID"] = run_id or _default_run_id("CaseOps_QKGain50_WD090_ProxyControl_Modal8x")
     if extra_env:
         overrides.update(extra_env)
-    _run_torchrun(nproc=8, env_overrides=overrides)
+    _run_torchrun(nproc=8, env_overrides=overrides, base_env=BEST_NONTTT_ENV)
+
+
+@app.function(
+    gpu="H100:8",
+    cpu=16.0,
+    memory=128 * 1024,
+    timeout=60 * 60,
+    volumes={"/vol/data": data_vol, "/vol/runs": run_vol},
+)
+def train_ttt(
+    iterations: int = 20000,
+    max_wallclock_seconds: float = 600.0,
+    run_id: str | None = None,
+    extra_env: dict[str, str] | None = None,
+):
+    overrides = {
+        "ITERATIONS": str(iterations),
+        "MAX_WALLCLOCK_SECONDS": str(max_wallclock_seconds),
+    }
+    overrides["RUN_ID"] = run_id or _default_run_id("CaseOps_QKGain50_WD090_ProxyControl_TTT_Modal8x")
+    if extra_env:
+        overrides.update(extra_env)
+    _run_torchrun(nproc=8, env_overrides=overrides, base_env=BEST_TTT_ENV)
 
 
 @app.function(
@@ -223,7 +264,29 @@ def smoke(
         "RUN_ID": run_id or _default_run_id("CaseOps_QKGain50_WD090_ProxyControl_Modal1x_smoke"),
         "TRAIN_LOG_EVERY": "25",
     }
-    _run_torchrun(nproc=1, env_overrides=overrides)
+    _run_torchrun(nproc=1, env_overrides=overrides, base_env=BEST_NONTTT_ENV)
+
+
+@app.function(
+    gpu="H100:1",
+    cpu=8.0,
+    memory=64 * 1024,
+    timeout=60 * 60,
+    volumes={"/vol/data": data_vol, "/vol/runs": run_vol},
+)
+def smoke_ttt(
+    iterations: int = 20000,
+    max_wallclock_seconds: float = 600.0,
+    run_id: str | None = None,
+):
+    """Single-GPU smoke test for the conservative TTT variant."""
+    overrides = {
+        "ITERATIONS": str(iterations),
+        "MAX_WALLCLOCK_SECONDS": str(max_wallclock_seconds),
+        "RUN_ID": run_id or _default_run_id("CaseOps_QKGain50_WD090_ProxyControl_TTT_Modal1x_smoke"),
+        "TRAIN_LOG_EVERY": "25",
+    }
+    _run_torchrun(nproc=1, env_overrides=overrides, base_env=BEST_TTT_ENV)
 
 
 # ---------------------------------------------------------------
@@ -326,6 +389,22 @@ def main(
 
 
 @app.local_entrypoint()
+def main_ttt(
+    iterations: int = 20000,
+    wallclock: float = 600.0,
+    run_id: str = "",
+):
+    """Full 8xH100 run for the conservative TTT variant on the best CaseOps line."""
+    resolved_run_id = run_id or _default_run_id("CaseOps_QKGain50_WD090_ProxyControl_TTT_Modal8x")
+    train_ttt.remote(
+        iterations=iterations,
+        max_wallclock_seconds=wallclock,
+        run_id=resolved_run_id,
+    )
+    download_run(run_id=resolved_run_id)
+
+
+@app.local_entrypoint()
 def smoke_test(
     iterations: int = 20000,
     wallclock: float = 600.0,
@@ -334,6 +413,22 @@ def smoke_test(
     """Single H100 10-minute smoke path for the best non-TTT config."""
     resolved_run_id = run_id or _default_run_id("CaseOps_QKGain50_WD090_ProxyControl_Modal1x_smoke")
     smoke.remote(
+        iterations=iterations,
+        max_wallclock_seconds=wallclock,
+        run_id=resolved_run_id,
+    )
+    download_run(run_id=resolved_run_id)
+
+
+@app.local_entrypoint()
+def smoke_test_ttt(
+    iterations: int = 20000,
+    wallclock: float = 600.0,
+    run_id: str = "",
+):
+    """Single H100 smoke path for the conservative TTT variant."""
+    resolved_run_id = run_id or _default_run_id("CaseOps_QKGain50_WD090_ProxyControl_TTT_Modal1x_smoke")
+    smoke_ttt.remote(
         iterations=iterations,
         max_wallclock_seconds=wallclock,
         run_id=resolved_run_id,

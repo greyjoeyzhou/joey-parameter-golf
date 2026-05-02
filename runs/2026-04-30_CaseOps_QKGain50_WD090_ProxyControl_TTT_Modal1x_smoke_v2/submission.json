@@ -1,0 +1,11 @@
+{
+  "author": "na",
+  "github_id": "na",
+  "name": "2026-04-30_CaseOps_QKGain50_WD090_ProxyControl_TTT_Modal1x_smoke_v2",
+  "blurb": "1xH100 Modal smoke run for a conservative TTT variant on the CaseOps proxy-control stack.",
+  "date": "2026-04-30T00:00:00Z",
+  "val_loss": 3.91892557,
+  "val_bpb": 1.51394474,
+  "bytes_total": 16069562,
+  "bytes_code": 80055
+}
